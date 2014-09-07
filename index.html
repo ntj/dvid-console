@@ -18,27 +18,31 @@
 	<header class="inner">
 		<a id="forkme_banner" href="https://github.com/janelia-flyem/dvid">View DVID on GitHub</a>
 
-		<h1 id="project_title">DVID Web Server</h1>
-		<h2 id="project_tagline">Stock help page</h2>
+		<h1 id="project_title">Medulla Single Column</h1>
+		<h2 id="project_tagline">FIB imaging and segmentation</h2>
 	</header>
 </div>
 
 <!-- MAIN CONTENT -->
 <div id="main_content_wrap" class="outer">
 	<section id="main_content" class="inner">
-		<h3>Welcome to DVID</h3>
+		<h3>Hosted on open-source DVID system</h3>
 
 		<p>DVID documentation can be found on the extensive <a href="https://github.com/janelia-flyem/dvid#dvid-">README</a> 
 			on github as well as the automatically updated <a href="https://godoc.org/github.com/janelia-flyem/dvid">Go Doc
 			documentation</a>.</p>
-		<p>The <a href="/console/index.html">DVID admin console</a> for this server may be available if you have 
-			permissions.</p>
+		<p>The <a href="/console/index.html">DVID admin console</a> for this server shows a single dataset repository
+            and data instances.</p>
 	
-		<h4>HTTP API</h4>
+		<h4>Exploring the HTTP API</h4>
+        
+        <p>Each data type within DVID exposes a HTTP API allowing clients like this browser to retrieve and put data.
+           Command-line and HTTP API documentation is currently distributed over a variety of data types.  Visit
+           the <a href="/api/help">/api/help HTTP endpoint</a> on a running DVID server to review the current call formats.<p>
 
-		<p>Please consult the
-		<a href="https://github.com/janelia-flyem/dvid#dvid-">DVID documentation</a> for type-specific API help or
-		you can browse the <a href="/raml/index.html">DVID API console</a>.
+		<h6>GET image</h6>
+        
+        <p><code>http://emdata.janelia.org/api/node/3fa/raw/xy/500_500/1000_1000_3000</code></p>
 
 		<h3>Licensing</h3>
 		<p>DVID is released under the
