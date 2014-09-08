@@ -60,14 +60,18 @@
             <div class="box-content">
                 <ul class="dashboard-list">
                     <li ng-repeat="dataset in datasets">
+			<strong>Alias:</strong> FIB-25 <em>(ROI-restricted)</em><br />
+			<strong>Description:</strong> One-column export from extended FIB-25<br />
+<!--
                         <strong>Alias:</strong> {{ dataset.Alias }}<br />
                         <strong>Description:</strong> {{ dataset.Description }}<br />
-                        <strong>UUID:</strong> <a href="#">{{ dataset.Root }}</a><br />
+-->
+                        <strong>UUID:</strong> <a href="#">{{ dataset.Root }}</a>
+                        <span class="label label-important">Locked</span><br />
                         <strong>Updated:</strong> {{ dataset.updatedStr }}<br />
                         <strong>Created:</strong> {{ dataset.createdStr }}<br />
                         <br />
                         <!--
-                        <span class="label label-important" ng-show="version.Locked">Locked</span>
                         <span class="label label-success" ng-hide="version.Locked">Open</span> -->
                             <div ng-repeat="instance in dataset.DataInstances">
                                 <em>{{ instance.Base.Name }}</em>
@@ -76,6 +80,15 @@
                                 <span class="label label-success" ng-hide="instance.Base.Versioned">unversioned</span>
                             </div>
                         <br />
+			<div>
+			<strong>Note:</strong> Only <em>bodies</em> and <em>grayscale</em> data instances
+			    were pushed.  The <em>composite</em> data instance was created locally via
+			    the <a href="/api/help/labels64">"composite" labels64 command</a>.  
+			    The <em>onecolumn</em>, <em>sp2body</em>,
+			    and <em>superpixels</em> instances were not pushed from origin DVID server
+			    and are empty on this server.
+			</div>
+			<br />
                     </li>
                 </ul>
             </div>
