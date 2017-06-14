@@ -42,6 +42,9 @@ class ServerStore {
       uuid: opts.uuid,
       endpoint: 'branch',
       method:'POST',
+      payload: JSON.stringify({
+        'branch': opts.branchname
+      }),
       callback: function(data) {
         if(opts.callback){
           opts.callback()
@@ -82,6 +85,27 @@ class ServerStore {
         self.onFetch(opts);
       },
       error: err
+    });
+  }
+
+  onCreateChild(opts){
+    var self = this;
+    this.api.node({
+      uuid: opts.uuid,
+      endpoint: 'newversion',
+      method:'POST',
+      payload: JSON.stringify({
+        'note': opts.note || ''
+      }),
+      callback: function(data) {
+        if(opts.callback){
+          opts.callback()
+        }
+        self.onFetch(opts);
+      },
+      error: function(err) {
+        ErrorActions.update(err);
+      }
     });
   }
 

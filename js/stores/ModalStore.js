@@ -5,11 +5,13 @@ import ModalActions from '../actions/ModalActions';
 const BRANCH_MODAL = Symbol();
 const COMMIT_MODAL = Symbol();
 const DAGINFO_MODAL = Symbol();
+const NEWCHILD_MODAL = Symbol();
 
 export const ModalTypes = {
   BRANCH_MODAL,
   COMMIT_MODAL,
-  DAGINFO_MODAL
+  DAGINFO_MODAL,
+  NEWCHILD_MODAL
 };
 
 

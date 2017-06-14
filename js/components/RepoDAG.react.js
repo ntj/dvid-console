@@ -272,24 +272,38 @@ var RepoDAGDisplay  = React.createClass({
       .style("visibility", "hidden")
       .text("a simple tooltip");
 
+    var lockXOffset = '-45px';
+    if(this.isEditable()){
+      lockXOffset = '-22px';
+    }
     //add lock icons
     elementHolderLayer.selectAll("g.node.type-locked")
       .append("svg:foreignObject")
       .attr("width", 20)
       .attr("height", 20)
       .attr("y", "-34px")
-      .attr("x", "-35px")
+      .attr("x", lockXOffset)
       .append("xhtml:span")
       .attr("class", "lock fa fa-lock");
 
     if(this.isEditable()){
+      //add new icons
+      elementHolderLayer.selectAll("g.node.type-locked")
+        .append("svg:foreignObject")
+        .attr("width", 20)
+        .attr("height", 20)
+        .attr("y", "-34px")
+        .attr("x", "-43px")
+        .append("xhtml:span")
+        .attr("class", "newChild fa fa-plus-square-o");
+
       //add branch icons
       elementHolderLayer.selectAll("g.node.type-locked")
         .append("svg:foreignObject")
         .attr("width", 20)
         .attr("height", 20)
         .attr("y", "-34px")
-        .attr("x", "-45px")
+        .attr("x", "-32px")
         .append("xhtml:span")
         .attr("class", "branch fa fa-code-fork");
     }
@@ -366,7 +380,13 @@ var RepoDAGDisplay  = React.createClass({
                   uuid: uuid
                 });
             }
-
+            else if(classList.contains("newChild")){
+              action = ModalActions.openModal.bind({},  
+                {
+                  MODAL_TYPE: ModalTypes.NEWCHILD_MODAL, 
+                  uuid: uuid
+                });
+            }
             //determine if a navigation is also needed
             if(self.uuid !== uuid){
               //it's not the current node--navigate to the node

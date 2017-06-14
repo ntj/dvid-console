@@ -280,6 +280,9 @@ svg {
   position: static;
 }
 
+span.newChild{
+    cursor:pointer;
+}
 span.branch{
     cursor:pointer;
 }

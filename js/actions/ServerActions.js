@@ -31,6 +31,9 @@ class ServerActions {
   commitNode(data) {
     this.dispatch(data);
   }
+  createChild(data) {
+    this.dispatch(data);
+  }
   updateUuuid(data) {
     this.dispatch(data);
   }

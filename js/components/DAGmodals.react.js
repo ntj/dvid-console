@@ -16,10 +16,17 @@ class DAGmodals extends React.Component {
   branchNode() {
     ServerActions.branchNode({
       uuid: this.props.uuid,
+      branchname: ReactDOM.findDOMNode(this.refs.branchname).value,
       callback: ModalActions.closeModal
     });
   }
 
+  createChild() {
+    ServerActions.createChild({
+      uuid: this.props.uuid,
+      callback: ModalActions.closeModal
+    });
+  }
 
   commitNode(event) {
     var self = this;
@@ -76,12 +83,28 @@ class DAGmodals extends React.Component {
             <Modal.Title>Branch node {this.props.uuid}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              <p> Are you sure you want to branch this node? This will create a new unlocked child node.</p>
+              <p> Are you sure you want to branch this node? This will create a new named branch and the first unlocked child node in this branch.</p>
+              <div className="form-group">
+                <input className="form-control" type="text" ref="branchname" name="branchname" id="branchname" placeholder="Enter your new branch name"/>
+              </div>
               <div className="form-group">
                 <button onClick={this.branchNode.bind(this)} className="btn btn-primary">Branch</button>
               </div>
             </Modal.Body>
           </Modal>
+
+          <Modal show={this.props.currentModal === ModalTypes.NEWCHILD_MODAL} onHide={ModalActions.closeModal}>
+            <Modal.Header closeButton>
+            <Modal.Title>Create a new child node of {this.props.uuid}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p> A new unlocked node in this branch will be created.</p>
+              <div className="form-group">
+                <button onClick={this.createChild.bind(this)} className="btn btn-primary">Create Node</button>
+              </div>
+            </Modal.Body>
+          </Modal>
+
 
             <Modal show={this.props.currentModal === ModalTypes.DAGINFO_MODAL} onHide={ModalActions.closeModal}>
             <Modal.Header closeButton>
@@ -117,9 +140,21 @@ class DAGmodals extends React.Component {
                     <span className="fa fa-code-fork"></span>
                   </td>
                   <td>
-                    Node can be branched. Clicking this icon will branch the node, which creates a direct descendant node.
+                    Creates a new node with a user-defined branch name.
                   </td>
-                </tr>)}
+                </tr>
+                )}
+                { this.props.isEditable &&
+                (
+                <tr>
+                  <td className="text-center">
+                    <span className="fa fa-plus-square-o"></span>
+                  </td>
+                  <td>
+                    Clicking will create a new direct descendant node in the same branch.
+                  </td>
+                </tr>
+                )}
                 <tr>
                   <td className="text-center">
                     <span className="label label-default">hover</span>
