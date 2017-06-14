@@ -8,6 +8,8 @@ import LogActions from '../actions/LogActions';
 import ServerActions from '../actions/ServerActions';
 import InstanceActions from '../actions/InstanceActions';
 import ServerStore from '../stores/ServerStore';
+import BranchActions from '../actions/BranchActions';
+import BranchStore from '../stores/BranchStore';
 import AltContainer from 'alt-container';
 import ErrorActions from '../actions/ErrorActions';
 import ModalActions from '../actions/ModalActions';
@@ -36,16 +38,16 @@ var RepoDAGDisplay  = React.createClass({
   },
 
   componentDidMount: function() {
-    this.drawGraph(this.props);
+    this.drawGraph(this.props.ServerStore);
     $(ReactDOM.findDOMNode(this)).tooltip({
       selector: '[data-toggle="tooltip"]'
     });
   },
 
   shouldComponentUpdate: function(nextProps, nextState){
-    const repo_updated = stringify(nextProps.repo.DAG) !== stringify(this.props.repo.DAG);
+    const repo_updated = stringify(nextProps.ServerStore.repo.DAG) !== stringify(this.props.ServerStore.repo.DAG);
 
-    if(nextProps.uuid !== this.props.uuid || repo_updated || this.state.isAdmin !== nextState.isAdmin){
+    if(nextProps.ServerStore.uuid !== this.props.ServerStore.uuid || repo_updated || this.state.isAdmin !== nextState.isAdmin){
       return true;
     }
 
@@ -53,15 +55,15 @@ var RepoDAGDisplay  = React.createClass({
   },
 
   isEditable(){
-    const serverInfo = this.props.serverInfo;
+    const serverInfo = this.props.ServerStore.serverInfo;
     //for the full app, check if admin mode is enabled
     //for the lite app, check if the serverInfo mode is set to 'read only'
     return this.state.isAdmin ||
       (this.props.lite && (serverInfo && serverInfo.Mode ? serverInfo.Mode !== 'read only' : true));
   },
 
-  componentDidUpdate: function(props) {
-    this.drawGraph(this.props);
+  componentDidUpdate: function(prevProps) {
+    this.drawGraph(this.props.ServerStore);
   },
 
   componentWillUnmount() {
@@ -69,9 +71,9 @@ var RepoDAGDisplay  = React.createClass({
     tips.tooltip('destroy');
   },
 
-  drawGraph: function(props) {
-    if (props.repo.DAG.Nodes.hasOwnProperty(props.uuid)) {
-      this.initDag(this, props);
+  drawGraph: function(ServerProps) {
+    if (ServerProps.repo.DAG.Nodes.hasOwnProperty(ServerProps.uuid)) {
+      this.initDag(this, ServerProps);
     }
   },
 
@@ -431,7 +433,7 @@ var RepoDAGDisplay  = React.createClass({
   },
 
   navigateDAG: function(uuid, callback){
-    if(uuid !== this.props.uuid){
+    if(uuid !== this.props.ServerStore.uuid){
       if(this.props.lite){
         InstanceActions.clearMeta();
         ServerActions.fetch({uuid:uuid});
@@ -601,7 +603,7 @@ var RepoDAGDisplay  = React.createClass({
   render: function() {
     var scrollToMasterBtn = '';
 
-    if (this.props.repoMasterUuuid){
+    if (this.props.ServerStore.repoMasterUuuid){
       scrollToMasterBtn = <button className="btn btn-default master pull-right" data-container="body" data-toggle="tooltip" data-placement="bottom" 
                 title="scroll to master node" onClick={this.scrollToMaster}><span className="fa fa-crosshairs"></span></button>
     }
@@ -649,8 +651,8 @@ class RepoDAG extends React.Component {
 
   render() {
     return (
-      <AltContainer store={ServerStore}>
-        <RepoDAGDisplay uuid={this.props.uuid} lite={this.props.lite}/>
+      <AltContainer stores={{ServerStore, BranchStore}}>
+        <RepoDAGDisplay lite={this.props.lite}/>
       </AltContainer>
     );
   }

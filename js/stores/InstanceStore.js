@@ -12,6 +12,7 @@ class InstanceStore {
     this.restrictions = null;
     this.api = dvid.connect({host: config.host, port: config.port, username: 'dvidconsole', application: 'dvidconsole'});
     this.selectedInstances = new Set();
+    this.selectedBranch = null;
   }
 
   onUpdateSelected(opts){
