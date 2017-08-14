@@ -590,7 +590,7 @@ var RepoDAGDisplay  = React.createClass({
     var dagHeight = "500"
     if(this.props.lite==="1"){
       dagHeight = "400"
-      headline = <div id='dag-header'><h5>Version History</h5></div>;
+      headline = <div id='dag-header'><h5>Version History Antje</h5></div>;
     }
     return (
       <div>

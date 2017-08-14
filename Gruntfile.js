@@ -210,5 +210,5 @@ module.exports = function(grunt) {
   grunt.registerTask('dist', ['modernizr:dist', 'browserify:full','uglify:full','copy:full', 'compress']);
   //lite builds
   grunt.registerTask('dev-lite', ['modernizr:dist', 'browserify:lite', 'copy:dev', 'connect:lite', 'watchlite'])
-  grunt.registerTask('dist-lite', ['modernizr:dist', 'browserify:lite','uglify:lite','copy:lite']);
+  grunt.registerTask('dist-lite', ['modernizr:dist', 'browserify:lite','uglify:lite']);
 };
