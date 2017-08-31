@@ -410,3 +410,8 @@ button.current{
   margin-top: 2.5em;
 }
 
+.dag-dropdown {
+  width: 40%;
+  position: absolute;
+  margin: 5px 0px 0px 19px;
+}

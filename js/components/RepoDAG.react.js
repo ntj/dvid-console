@@ -14,6 +14,7 @@ import ModalActions from '../actions/ModalActions';
 import {ModalTypes} from '../stores/ModalStore';
 import DAGmodals from '../components/DAGmodals.react.js';
 import stringify from 'json-stable-stringify';
+import Autocomplete from 'react-autocomplete';
 
 var dag, elementHolderLayer, svgBackground;
 
@@ -578,6 +579,18 @@ var RepoDAGDisplay  = React.createClass({
     document.body.appendChild(e);
   },
 
+   getDataVersions: function(){
+      var result = [];
+	return [{label:'value'}];
+      for (var key in this.props.repo.DAG.Nodes.foreach){
+	name = key.substr(0,5);
+	value = this.props.repo.DAG.Nodes[key];
+	result.push({label: name});
+      }
+      console.log(result);
+      return result;
+   },
+
   render: function() {
     var scrollToMasterBtn = '';
 
@@ -587,16 +600,33 @@ var RepoDAGDisplay  = React.createClass({
     }
     
     var headline = <h4>Version History</h4>;
-    var dagHeight = "500"
+    var options = ['one','two','three'];
+
+    var dagHeight = "500";
+    var value = 'value';
     if(this.props.lite==="1"){
-      dagHeight = "400"
-      headline = <div id='dag-header'><h5>Version History Antje</h5></div>;
+      dagHeight = "400";
+      headline = <div id='dag-header'><h5>Version History Thursday</h5></div>;
     }
     return (
       <div>
         {headline}
         <div className="dag">
           <div>
+             <div className="dag-dropdown">
+                <Autocomplete
+                    getItemValue={(item) => item.label}
+                    items={this.getDataVersions()}
+                    renderItem={(item, isHighlighted) =>
+                        <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
+                           {item.label}
+                        </div>
+                    }
+                    value={value}
+                    onChange={(e) => value = e.target.value}
+                    onSelect={(val) => value = val}
+                />
+             </div>
             <div className='dag-tools'>
               <button className="btn btn-default pull-right" data-container="body" data-toggle="tooltip" data-placement="bottom" 
                 title="help" onClick={ModalActions.openModal.bind({}, 
