@@ -31,7 +31,8 @@ var RepoDAGDisplay  = React.createClass({
   componentWillReceiveProps: function(nextProps){
     if(this.state.isAdmin !== !!this.context.router.getCurrentQuery().admin){
       this.setState({
-        isAdmin: !this.state.isAdmin
+        isAdmin: !this.state.isAdmin,
+        listDataFromChild: null
       })
     }
   },
@@ -53,7 +54,7 @@ var RepoDAGDisplay  = React.createClass({
     return false;
   },
 
-  isEditable(){
+  isEditable() {
     const serverInfo = this.props.serverInfo;
     //for the full app, check if admin mode is enabled
     //for the lite app, check if the serverInfo mode is set to 'read only'
@@ -114,7 +115,7 @@ var RepoDAGDisplay  = React.createClass({
             .attr('in2', "blurOut")
             .attr('mode', "normal");
 
-    //creates new dagreD3 object
+    // creates new dagreD3 object
     dag = new dagreD3.graphlib.Graph({
         compound: true,
         multigraph: true
@@ -124,7 +125,7 @@ var RepoDAGDisplay  = React.createClass({
         return {};
     });
 
-    //adds nodes and edges from the JSON dag data
+    // adds nodes and edges from the JSON dag data
     $.each(props.repo.DAG.Nodes, function (name, n) {
         var version = n.VersionID;
         var log = '';
@@ -156,7 +157,7 @@ var RepoDAGDisplay  = React.createClass({
 
         dag.setNode(version, {
             label: version + ': ' + name.substr(0, 5),
-            class: nodeclass,
+            ssssons: nodeclass,
             rx: 5,
             ry: 5,
             log: log,
@@ -178,7 +179,7 @@ var RepoDAGDisplay  = React.createClass({
         });
     });
 
-    //returns a list of all predecessors of a parent node
+    // returns a list of all predecessors of a parent node
     function findAllPredecessors(node, predecessorsList) {
         predecessorsList = predecessorsList || [];
         dag.predecessors(node).forEach(function (n) {
@@ -191,7 +192,7 @@ var RepoDAGDisplay  = React.createClass({
         return predecessorsList;
     }
 
-    //sets merges and all their predecessors to be uncollapsible
+    // sets merges and all their predecessors to be uncollapsible
     //gives merges a "merge" class
     dag.nodes().forEach(function (n) {
         if (dag.predecessors(n).length > 1) {
@@ -204,7 +205,7 @@ var RepoDAGDisplay  = React.createClass({
         }
     });
 
-    //gives parents a variable to access their collapsible children
+    // gives parents a variable to access their collapsible children
     dag.nodes().forEach(function (n) {
         //collapsibleChildren will be a dictionary with key being the node name (that you can call dag.node() with) and the value being properties of that node
         var collapsibleChildren = {};
@@ -221,7 +222,7 @@ var RepoDAGDisplay  = React.createClass({
         }
     });
 
-    //kludge for fixing edge crossings created by the initial dagre render:
+    // kludge for fixing edge crossings created by the initial dagre render:
     // collapse, then expand
     this.collapseGraph();
     this.scrollToCurrent();
@@ -273,7 +274,7 @@ var RepoDAGDisplay  = React.createClass({
       .style("visibility", "hidden")
       .text("a simple tooltip");
 
-    //add lock icons
+    // add lock icons
     elementHolderLayer.selectAll("g.node.type-locked")
       .append("svg:foreignObject")
       .attr("width", 20)
@@ -295,7 +296,7 @@ var RepoDAGDisplay  = React.createClass({
         .attr("class", "branch fa fa-code-fork");
     }
 
-    //add unlocked icon
+    // add unlocked icon
     elementHolderLayer.selectAll("g.node.type-unlocked")
       .append("svg:foreignObject")
       .attr("width", 20)
@@ -305,7 +306,7 @@ var RepoDAGDisplay  = React.createClass({
       .append("xhtml:span")
       .attr("class", `unlocked fa fa-unlock ${forbidden_toggle}`);
 
-    //add navigation listener
+    // add navigation listener
     elementHolderLayer.selectAll("g.node rect")
       .on("mouseenter", function (v) {
         if (dag.node(v).note) {
@@ -333,7 +334,7 @@ var RepoDAGDisplay  = React.createClass({
         }
       });
 
-    //add commit and branch actions, if allowed
+    // add commit and branch actions, if allowed
     if(this.isEditable()){
       elementHolderLayer.selectAll("g.node foreignObject span")
         //want to add tooltips?
@@ -347,11 +348,11 @@ var RepoDAGDisplay  = React.createClass({
           // prevents a drag from being registered as a click
           if (d3.event.defaultPrevented) return;
           else{
-            //loads the node's data into page 
+            // loads the node's data into page
             var uuid = dag.node(v).uuid;
             var classList = d3.event.path[0].classList;
 
-            //figure out what action to take based on the icon class
+            // figure out what action to take based on the icon class
             var action = null;
             if (classList.contains("unlocked")){
               action = ModalActions.openModal.bind({}, 
@@ -368,9 +369,9 @@ var RepoDAGDisplay  = React.createClass({
                 });
             }
 
-            //determine if a navigation is also needed
+            // determine if a navigation is also needed
             if(self.uuid !== uuid){
-              //it's not the current node--navigate to the node
+              // it's not the current node--navigate to the node
               self.navigateDAG(uuid, action)
             }
             else if (action){
@@ -436,6 +437,7 @@ var RepoDAGDisplay  = React.createClass({
       setTimeout(function(){callback();}, 0)
     }
   },
+
   scrollToCurrent: function(){
     ErrorActions.clear.defer()
     this.expandGraph()
@@ -444,10 +446,10 @@ var RepoDAGDisplay  = React.createClass({
     if(!success){
       ErrorActions.update('Can\'t find current node');
     }
-    
   },
+
   scrollToMaster: function(){
-    ErrorActions.clear()
+    ErrorActions.clear();
     this.expandGraph();
     var success = this.scrollToNode(".node.master");
     if(!success){
@@ -455,9 +457,9 @@ var RepoDAGDisplay  = React.createClass({
       ErrorActions.update('Repo does not have a master node');
     }
   },
+
   scrollToNode: function(nodeSelector){
     // figure out the scale ratio that will be used to resize the graph.
-
     var node = elementHolderLayer.select(nodeSelector);
     if(!node.empty()){
       //get the current transform applied to the node
@@ -470,14 +472,17 @@ var RepoDAGDisplay  = React.createClass({
       }
       // apply with a basic transition
       elementHolderLayer.transition().duration(300).attr("transform", "translate(" + newT.x + ", " + newT.y + ")");
-      //pass scale=1, since we're using the initial element size
+      // pass scale=1, since we're using the initial element size
       this.setZoom([newT.x, newT.y], 1);
       return true;
     }
     else{
       return false;
     }
+  },
 
+  autocompleteCallback: function(dataFromAutoComplete){
+    this.setState({ listDataFromChild: dataFromChild });
   },
 
   setZoom: function(center, scale){
@@ -511,7 +516,7 @@ var RepoDAGDisplay  = React.createClass({
 
   },
 
-  //toggles collapsing and expanding of a parent node
+  // toggles collapsing and expanding of a parent node
   toggleChildren: function (parent) {
     if (dag.node(parent) && dag.node(parent).expandedChildren) {
         collapseChildren(parent)
@@ -522,7 +527,7 @@ var RepoDAGDisplay  = React.createClass({
     this.scrollToNode('#node' + parent)
   },
 
-  //fully expands entire DAG
+  // fully expands entire DAG
   expandGraph: function (someExpanded = false) {
     //skip expansion if no nodes are hidden
 
@@ -548,9 +553,9 @@ var RepoDAGDisplay  = React.createClass({
       }
   },
 
-  //fully collapses entire DAG
+  // fully collapses entire DAG
   collapseGraph: function () {
-    //need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
+    // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
     dag.nodes().reverse().forEach(function (n) {
       if (dag.node(n) && dag.node(n).expandedChildren) {
           collapseChildren(n)
@@ -571,6 +576,7 @@ var RepoDAGDisplay  = React.createClass({
     this.collapseGraph();
     this.fitDAG();    
   },
+
   downloadSVGHandler: function(event) {
     this.fitDAG();
     var e = document.createElement('script');
@@ -578,6 +584,16 @@ var RepoDAGDisplay  = React.createClass({
     e.setAttribute('class', 'svg-crowbar');
     document.body.appendChild(e);
   },
+
+   getDataVersions: function(){
+     var result = [];
+     var keys = Object.keys(this.props.repo.DAG.Nodes);
+     var values = Object.values(this.props.repo.DAG.Nodes);
+     for (var i = 0; i < values.length; i++){
+       result.push({label: values[i].VersionID + ": " + values[i].UUID.substr(0,5)});
+     }
+     return result;
+   },
 
   render: function() {
     var scrollToMasterBtn = '';
@@ -588,9 +604,13 @@ var RepoDAGDisplay  = React.createClass({
     }
     
     var headline = <h4>Version History</h4>;
-    var dagHeight = "500"
+    var options = ['one','two','three'];
+
+    var dagHeight = "500";
+    var value = '';
+
     if(this.props.lite==="1"){
-      dagHeight = "400"
+      dagHeight = "400";
       headline = <div id='dag-header'><h5>Version History</h5></div>;
     }
     return (
@@ -630,7 +650,6 @@ var RepoDAGDisplay  = React.createClass({
 
 
 class RepoDAG extends React.Component {
-
   render() {
     return (
       <AltContainer store={ServerStore}>
@@ -650,7 +669,7 @@ function translateEdge(e, dx, dy) {
     });
 }
 
-//taken from dagre-d3 source code (not the exact same)
+// taken from dagre-d3 source code (not the exact same)
 function calcPoints(e) {
     var edge = dag.edge(e.v, e.w),
         tail = dag.node(e.v),
@@ -670,7 +689,7 @@ function calcPoints(e) {
     (points);
 }
 
-//taken from dagre-d3 source code (not the exact same)
+// taken from dagre-d3 source code (not the exact same)
 function intersectRect(node, point) {
     var x = node.x;
     var y = node.y;
@@ -717,14 +736,14 @@ function expandChildren(parent){
   dag.node(parent).collapsedChildren = null;
 }
 
-//recursively collapses subgraph of parent
+// recursively collapses subgraph of parent
 function collapse(expandedChildren) {
     for (var child in expandedChildren) {
         dag.removeNode(child);
         collapse(expandedChildren[child].expandedChildren);
     }
 }
-//recursively expands subgraph of parent
+// recursively expands subgraph of parent
 function expand(parent, collapsedChildren) {
     for (var child in collapsedChildren) {
         dag.setNode(child, collapsedChildren[child]);

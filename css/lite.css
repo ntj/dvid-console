@@ -72,6 +72,12 @@
     margin: auto;
 }
 
+.dag-dropdown {
+    width: 10%;
+    float: left;
+    border: none !important;
+}
+
 button {
     cursor:pointer;
 }
