@@ -4,8 +4,11 @@ import React from 'react';
 import Autocomplete from 'react-autocomplete';
 
 /**
- * Found here
+ * Basic class setup found here:
  * https://ourcodeworld.com/articles/read/546/how-to-create-a-synchronous-and-asynchronous-autocomplete-input-in-reactjs
+ *
+ * Information about passing state information
+ * https://medium.com/@ruthmpardee/passing-data-between-react-components-103ad82ebd17
  */
 export default class MyComplete extends React.Component {
 
@@ -48,6 +51,7 @@ export default class MyComplete extends React.Component {
     this.setState({
       value: val
     });
+    this.props.callbackFromParent(val.substr(0,1));
   }
 
   /**
@@ -94,7 +98,20 @@ export default class MyComplete extends React.Component {
         }
       );
     }
-    return result;
+
+    result.sort(
+        function(a, b) {
+          if (a.label < b.label){
+            return -1;
+          }
+          if (a.label > b.label){
+            return 1;
+          }
+          return 0;
+        }
+    );
+
+    return result.sort();
   }
 
   render() {

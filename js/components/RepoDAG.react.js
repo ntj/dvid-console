@@ -18,11 +18,29 @@ import MyComplete from '../lite-components/MyComplete.react.js';
 
 var dag, elementHolderLayer, svgBackground;
 
+
+if (typeof mydagrepo == "undefined") {
+  var mydagrepo = {};
+};
+
+// returns a list of all predecessors of a parent node / more or less tail recursive function
+mydagrepo.findAllPredecessors = function(node, predecessorsList) {
+  predecessorsList = predecessorsList || [];
+  dag.predecessors(node).forEach(function (n) {
+    //some nodes can be visited more than once so this removes them
+    if (predecessorsList.indexOf(n) == -1) {
+      predecessorsList.push(n);
+    }
+    mydagrepo.findAllPredecessors(n, predecessorsList);
+  });
+  return predecessorsList;
+};
+
 // Dagre graph
-var RepoDAGDisplay  = React.createClass({
+var RepoDAGDisplay = React.createClass({
   mixins: [Router.Navigation],
 
-  getInitialState(){
+  getInitialState() {
     return {
       isAdmin: !!this.context.router.getCurrentQuery().admin
     }
