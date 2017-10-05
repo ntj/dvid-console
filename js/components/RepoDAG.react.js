@@ -14,6 +14,7 @@ import ModalActions from '../actions/ModalActions';
 import {ModalTypes} from '../stores/ModalStore';
 import DAGmodals from '../components/DAGmodals.react.js';
 import stringify from 'json-stable-stringify';
+import MyComplete from '../lite-components/MyComplete.react.js';
 
 var dag, elementHolderLayer, svgBackground;
 
@@ -597,6 +598,9 @@ var RepoDAGDisplay  = React.createClass({
         {headline}
         <div className="dag">
           <div>
+             <div className="dag-dropdown">
+                <MyComplete myNodes={this.props.repo.DAG.Nodes}/>
+             </div>
             <div className='dag-tools'>
               <button className="btn btn-default pull-right" data-container="body" data-toggle="tooltip" data-placement="bottom" 
                 title="help" onClick={ModalActions.openModal.bind({}, 
