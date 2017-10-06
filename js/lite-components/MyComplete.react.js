@@ -49,22 +49,40 @@ export default class MyComplete extends React.Component {
    */
   onSelect(val){
     this.setState({
-      value: val
+      value: val,
+
     });
-    this.props.callbackFromParent(val.substr(0,1));
+
+    var myData = this.state.autocompleteData;
+    // get the element from autocomplete data which matches val
+    var keys = Object.keys(myData);
+
+    for (var i = 0; i < keys.length; i++){
+        if (this.autocompleteData[keys[i]].VersionID == val){
+          this.props.callbackFromParent(this.autocompleteData[keys[i].UUID]);
+        }
+    }
   }
+
+
+  // getItem(label){
+  //     var result = this.getDataVersions();
+  //     for (var i = 0; i< result.length; i++){
+  //       if(result[i].)
+  //     }
+  // },
 
   /**
    * Define the markup of every rendered item of the autocomplete.
-   *
+   *vim 
    * @param {Object} item Single object from the data that can be shown inside the autocomplete
-   * @param {Boolean} isHighlighted declares wheter the item has been highlighted or not.
+   * @param {Boolean} isHighlighted declares whether the item has been highlighted or not.
    * @return {Markup} Component
    */
   renderItem(item, isHighlighted){
     return (
         <div style={{ background: isHighlighted ? 'lightgray' : 'white' }}>
-          {item.label} : {item.value}
+          {item.VersionID} : {item.value}
         </div>
     );
   }
@@ -79,38 +97,36 @@ export default class MyComplete extends React.Component {
     // You can obviously only return the Label or the component you need to show
     // In this case we are going to show the value and the label that shows in the input
     // something like "1 - Microsoft"
-    return `${item.label} : ${item.value}`;
+    return `${item.VersionID} : ${item.value}`;
   }
 
   /**
-   * Compute stuff
+   * Get the label and the value to fill the dropdown box
    */
   getDataVersions(){
-    var result = [];
     // var keys = Object.keys(this.props.repo.DAG.Nodes);
     var values = this.props.myNodes;
-
     var keys = Object.keys(values);
-    for (var i = 0; i < keys.length; i++){
+    var result = [];
+   for (var i = 0; i < keys.length; i++){
       result.push({
-          label: values[keys[i]].VersionID,
-          value: values[keys[i]].UUID.substr(0,5)
+          VersionID: values[keys[i]].VersionID,
+          UUID: values[keys[i]].UUID,
+          value: values[keys[i]].UUID.substr(0,5),
         }
       );
     }
-
     result.sort(
         function(a, b) {
-          if (a.label < b.label){
+          if (a.VersionID < b.VersionID){
             return -1;
           }
-          if (a.label > b.label){
+          if (a.VersionID > b.VersionID){
             return 1;
           }
           return 0;
         }
     );
-
     return result.sort();
   }
 
