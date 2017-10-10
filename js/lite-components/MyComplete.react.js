@@ -58,8 +58,8 @@ export default class MyComplete extends React.Component {
     var keys = Object.keys(myData);
 
     for (var i = 0; i < keys.length; i++){
-        if (this.autocompleteData[keys[i]].VersionID == val){
-          this.props.callbackFromParent(this.autocompleteData[keys[i].UUID]);
+        if (myData[keys[i]].VersionID == val.substr(0,1)){
+          this.props.callbackFromParent(myData[keys[i]]);
         }
     }
   }

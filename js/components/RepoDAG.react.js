@@ -35,6 +35,16 @@ mydagrepo.findAllPredecessors = function(node, predecessorsList) {
   return predecessorsList;
 };
 
+mydagrepo.getNodeByVersionID = function(that, props, versionId){
+  var nodes = props.repo.DAG.Nodes;
+  var keys = Object.keys(nodes);
+  for (var k = 0; k < keys.length; k++){
+    if(nodes[keys[k]].VersionID == versionId){
+      return nodes[keys[k]].UUID;
+    }
+  }
+};
+
 // Dagre graph
 var RepoDAGDisplay = React.createClass({
   mixins: [Router.Navigation],
@@ -95,26 +105,25 @@ var RepoDAGDisplay = React.createClass({
   },
 
   myCallback: function (selectedNode) {
-    // var result = mydagrepo.findAllPredecessors(selectedNode,[]);
-
-
     this.drawPartialTree(this, this.props, selectedNode);
   },
 
   drawPartialTree: function(that, props, selectedNode) {
-    console.log('props: ' + props);
-    console.log('selectedNode ' + selectedNode);
     var svg = d3.select("svg");
     svg.selectAll("*").remove();
     elementHolderLayer = svg.append("g")
         .attr("id", "elementHolderLayer");
 
-    // adds nodes and edges from the JSON dag data
-    var result = mydagrepo.findAllPredecessors(selectedNode,[]);
-    $.each(result, function (name, n) {
-      var ntmp = dag.node(n);
-      name = ntmp.label;
-      var version = ntmp.VersionID;
+    // partial - adds nodes and edges from the JSON dag data
+    var nodeList = mydagrepo.findAllPredecessors(selectedNode.VersionID,[]);
+    var count = 0;
+
+    $.each(nodeList, function (name, n) {
+      count++;
+      var myUUID = mydagrepo.getNodeByVersionID(that, props, n);
+      var ntmp = props.repo.DAG.Nodes[myUUID];
+      name = myUUID; // name is supposed to be the UUID
+      var version = n;
       var log = '';
       if (ntmp.Log && ntmp.Log.length) log = (ntmp.Log);
       var nodeclass = "";
@@ -129,7 +138,6 @@ var RepoDAGDisplay = React.createClass({
       if (ntmp.Note){
         note = ntmp.Note;
       }
-      console.log('0');
       if (props.repoMasterUuuid && RegExp('^' + props.repoMasterUuuid).test(ntmp.UUID)) {
         nodeclass = nodeclass + " " + "master";
       }
@@ -140,11 +148,10 @@ var RepoDAGDisplay = React.createClass({
           }
         }.bind(this))
       }
-      console.log('1');
       if (ntmp.UUID === props.uuid) {
         nodeclass = nodeclass + " current ";
       }
-      console.log('2');
+      //partial set node
       dag.setNode(version, {
         label: version + ': ' + name.substr(0, 5),
         css: nodeclass,
@@ -160,7 +167,6 @@ var RepoDAGDisplay = React.createClass({
         isMerge: false,
         isCollapsible: true
       });
-      console.log('3');
       $.each(ntmp.Children, function (c) {
         dag.setEdge(version, ntmp.Children[c], {
           lineInterpolate: 'basis',
@@ -168,8 +174,9 @@ var RepoDAGDisplay = React.createClass({
           id: version + "-" + ntmp.Children[c]
         });
       });
+
+      that.collapsePartialGraph(nodeList);
     });
-    console.log('ready with partial');
   },
 
 initDag: function (t, props) {
@@ -293,7 +300,7 @@ initDag: function (t, props) {
     }
   });
 
-  // gives parents a variable to access their collapsible children
+  // gives parents a variable to access their collapsible children  --- start, no render yet
   dag.nodes().forEach(function (n) {
     //collapsibleChildren will be a dictionary with key being the node name (that you can call dag.node() with) and the value being properties of that node
     var collapsibleChildren = {};
@@ -312,15 +319,20 @@ initDag: function (t, props) {
 
   // kludge for fixing edge crossings created by the initial dagre render:
   // collapse, then expand
-  this.collapseGraph();
+  this.collapseGraph();  // collapse graph is rendering the graph
   this.scrollToCurrent();
 
-  //set transition for future collapsing and expanding
+  //set transition for future collapsing and expanding -- stop, here render took place
   dag.graph().transition = function (selection) {
     return selection.transition().duration(300);
   };
 
   this.fitDAG();
+},
+
+clear: function(){
+  var svg = d3.select("svg > g");
+  svg.selectAll("*").remove();
 },
 
 update: function (nodeset = null) {
@@ -656,11 +668,22 @@ collapseGraph: function () {
   this.update();
 },
 
+// collapses DAG given by nodes
+collapsePartialGraph: function (nodes) {
+  this.clear();
+  // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
+  nodes.reverse().forEach(function (n) {
+    if (dag.node(n) && dag.node(n).expandedChildren) {
+      collapseChildren(n)
+    }
+  });
+  // this.update();
+},
+
 expandAndScale: function () {
   ErrorActions.clear()
   this.expandGraph();
   this.fitDAG();
-
 },
 
 collapseAndScale: function () {
