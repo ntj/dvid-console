@@ -25,13 +25,19 @@ if (typeof mydagrepo == "undefined") {
 // returns a list of all predecessors of a parent node / more or less tail recursive function
 mydagrepo.findAllPredecessors = function(node, predecessorsList) {
   predecessorsList = predecessorsList || [];
-  dag.predecessors(node).forEach(function (n) {
-    //some nodes can be visited more than once so this removes them
-    if (predecessorsList.indexOf(n) == -1) {
-      predecessorsList.push(n);
-    }
-    mydagrepo.findAllPredecessors(n, predecessorsList);
-  });
+  console.log('node: ' + node + " pred: " + dag.nodes());
+  if (dag.predecessors(node)){
+    dag.predecessors(node).forEach(function (n) {
+      //some nodes can be visited more than once so this removes them
+      if (predecessorsList.indexOf(n) == -1) {
+        predecessorsList.push(n);
+      }
+      mydagrepo.findAllPredecessors(n, predecessorsList);
+    });
+  }
+  else{
+    console.log('no predecessors');
+  }
   return predecessorsList;
 };
 
@@ -43,6 +49,16 @@ mydagrepo.getNodeByVersionID = function(that, props, versionId){
       return nodes[keys[k]].UUID;
     }
   }
+};
+
+mydagrepo.nodeList = null;
+
+mydagrepo.getBranch = function(){
+
+};
+
+mydagrepo.resetGraph = function(dag){
+  dag.setNodes(mydagrepo.nodeList);
 };
 
 // Dagre graph
@@ -175,7 +191,7 @@ var RepoDAGDisplay = React.createClass({
         });
       });
 
-      that.collapsePartialGraph(nodeList);
+      that.collapsePartialGraph(nodeList, selectedNode);
     });
   },
 
@@ -327,6 +343,7 @@ initDag: function (t, props) {
     return selection.transition().duration(300);
   };
 
+  mydagrepo.nodeList = dag.nodes();
   this.fitDAG();
 },
 
@@ -359,6 +376,7 @@ update: function (nodeset = null) {
         .style("stroke-linejoin", "round");
     dagreD3.util.applyStyle(path, edge[type + "Style"]);
   };
+
   dagreRenderer(elementHolderLayer, dag);
 
   d3.select(".dag_note").remove();
@@ -669,15 +687,23 @@ collapseGraph: function () {
 },
 
 // collapses DAG given by nodes
-collapsePartialGraph: function (nodes) {
+collapsePartialGraph: function (nodes, selectedNode) {
   this.clear();
+  mydagrepo.resetGraph(dag);
   // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
   nodes.reverse().forEach(function (n) {
     if (dag.node(n) && dag.node(n).expandedChildren) {
       collapseChildren(n)
     }
   });
-  // this.update();
+  var dagNodes = dag.nodes();
+  for (var i = 0; i < dagNodes.length; i++){
+    if (dagNodes[i] != selectedNode.VersionID && nodes.indexOf(dagNodes[i]) == -1){
+      dag.removeNode(dagNodes[i]);
+    }
+  }
+  this.update(nodes);
+  this.fitDAG();
 },
 
 expandAndScale: function () {
@@ -875,3 +901,5 @@ function expand(parent, collapsedChildren) {
     expand(child, collapsedChildren[child].expandedChildren);
   }
 }
+
+
