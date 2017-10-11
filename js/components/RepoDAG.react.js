@@ -69,6 +69,8 @@ mydagrepo.resetGraph = function(dag){
   // }
 };
 
+mydagrepo.initialDag = null;
+
 // Dagre graph
 var RepoDAGDisplay = React.createClass({
   mixins: [Router.Navigation],
@@ -127,6 +129,8 @@ var RepoDAGDisplay = React.createClass({
       this.initDag(this, props);
     }
   },
+
+  initialDag: null,
 
   getNodeById: function(nodeVersionID, dag){
     var keys = Object.keys(dag.Nodes);
@@ -207,7 +211,9 @@ var RepoDAGDisplay = React.createClass({
 
     // finally, draw the graph
     this.drawTrunk(partialDag);
-
+    this.drawSubtree(partialDag,rootNode.label.substr(0,1));
+    this.update(partialDag);
+    this.fitDAG(partialDag);
   },
 
   drawTrunk: function(partialDag){
@@ -220,41 +226,27 @@ var RepoDAGDisplay = React.createClass({
       }
     });
 
+    // draw the edges
     var first=null;
     for (var i = 1; i < nodes.length; i++){
       first = nodes[i-1];
       partialDag.setEdge(first,nodes[i]);
     }
-
-    this.update(partialDag);
-    this.fitDAG(partialDag);
   },
 
-  drawSubtree: function(partialDag){
-
-  },
-
-  drawDag: function(partialDag){
-    var nodes = partialDag.nodes();
-
-    // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
-    nodes.reverse().forEach(function (n) {
-      if (partialDag.node(n) && partialDag.node(n).expandedChildren) {
-        collapseChildren(n)
+  setEdgeSubtree: function(partialDag, edges,rootId){
+    for (var i = 0; i < edges.length; i++){
+      if (edges[i].v == rootId){
+        partialDag.setNode(edges[i].w, this.initialDag._nodes[edges[i].w]);
+        partialDag.setEdge(edges[i].v, edges[i].w);
+        this.setEdgeSubtree(partialDag, edges,edges[i].w);
       }
+    }
+  },
 
-      // draw the edges
-      $.each(n.Children, function (c) {
-        partialDag.setEdge(version, n.Children[c], {
-          lineInterpolate: 'basis',
-          arrowheadStyle: "fill: #111",
-          id: version + "-" + n.Children[c]
-        });
-      });
-    });
-
-    this.update(partialDag);
-    this.fitDAG(partialDag);
+  drawSubtree: function(partialDag,rootId){
+    var edges = this.initialDag.edges();
+    this.setEdgeSubtree(partialDag,edges,rootId);
   },
 
   drawPartialTree: function(that, props, selectedNode) {
@@ -476,7 +468,8 @@ initDag: function (t, props) {
   //   return selection.transition().duration(300);
   // };
 
-  mydagrepo.nodeList = JSON.parse(JSON.stringify(dag._nodes));
+  // mydagrepo.nodeList = JSON.parse(JSON.stringify(dag._nodes));
+  this.initialDag = dag;
   this.fitDAG();
 },
 
