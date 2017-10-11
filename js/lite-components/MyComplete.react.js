@@ -64,14 +64,6 @@ export default class MyComplete extends React.Component {
     }
   }
 
-
-  // getItem(label){
-  //     var result = this.getDataVersions();
-  //     for (var i = 0; i< result.length; i++){
-  //       if(result[i].)
-  //     }
-  // },
-
   /**
    * Define the markup of every rendered item of the autocomplete.
    *vim 
