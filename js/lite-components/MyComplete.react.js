@@ -124,7 +124,7 @@ export default class MyComplete extends React.Component {
 
   render() {
     return (
-        <div>
+        <div className="no-border">
           <Autocomplete
               getItemValue={this.getItemValue}
               items={this.state.autocompleteData}
