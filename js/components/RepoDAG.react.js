@@ -25,7 +25,6 @@ if (typeof mydagrepo == "undefined") {
 // returns a list of all predecessors of a parent node / more or less tail recursive function
 mydagrepo.findAllPredecessors = function(node, predecessorsList) {
   predecessorsList = predecessorsList || [];
-  console.log('node: ' + node + " pred: " + dag.nodes());
   if (dag.predecessors(node)){
     dag.predecessors(node).forEach(function (n) {
       //some nodes can be visited more than once so this removes them
@@ -36,7 +35,7 @@ mydagrepo.findAllPredecessors = function(node, predecessorsList) {
     });
   }
   else{
-    console.log('no predecessors');
+    console.log('no predecessors for node' + node);
   }
   return predecessorsList;
 };
@@ -53,12 +52,21 @@ mydagrepo.getNodeByVersionID = function(that, props, versionId){
 
 mydagrepo.nodeList = null;
 
-mydagrepo.getBranch = function(){
-
-};
-
 mydagrepo.resetGraph = function(dag){
-  dag.setNodes(mydagrepo.nodeList);
+  // test if the number of nodes in current dag is different from initial number
+  var backupKeys = Object.keys(mydagrepo.nodeList);
+  var dagKeys = Object.keys(dag.Nodes);
+  // if (dagKeys.length < backupKeys.length){
+    for (var k = 0; k < dagKeys.length; k++){
+      // dag.removeNode(k);
+    }
+    for (var k = 0; k < backupKeys.length; k++){
+      dag.setNode(mydagrepo[backupKeys[k]]);
+    }
+  // }
+  // else{
+  //   console.log('this is same tree');
+  // }
 };
 
 // Dagre graph
@@ -120,8 +128,98 @@ var RepoDAGDisplay = React.createClass({
     }
   },
 
+  getNodeById: function(nodeVersionID, dag){
+    var keys = Object.keys(dag.Nodes);
+    for (var k = 0; k < keys.length; k++){
+      var node = dag.Nodes[keys[k]];
+      if (node.VersionID == nodeVersionID){
+        return node;
+      }
+    }
+    return node;
+  },
+
   myCallback: function (selectedNode) {
-    this.drawPartialTree(this, this.props, selectedNode);
+    this.clear();
+
+    // create new graph
+    var partialDag = new dagreD3.graphlib.Graph({
+      compound: true,
+      multigraph: true
+    })
+    .setGraph({})
+    .setDefaultEdgeLabel(function () {
+      return {};
+    });
+
+    // add partial nodes to new graph -- first the root node
+    var version = selectedNode.VersionID;
+    var name = selectedNode.UUID;
+    var nodeclass = "";
+    var log = "";
+    var note = 'test note';
+
+    var rootNode = {
+      label: version + ': ' + name.substr(0, 5),
+      css: nodeclass,
+      rx: 5,
+      ry: 5,
+      log: log,
+      note: note,
+      fullname: version + ': ' + name,
+      uuid: name,
+      id: "node" + version,
+      expandedChildren: null,
+      collapsedChildren: null,
+      isMerge: false,
+      isCollapsible: false
+    };
+    partialDag.setNode(version, rootNode);
+
+    // Get all the predecessors of a node
+    var preds = mydagrepo.findAllPredecessors(version);
+
+    for (var p = 0; p < preds.length; p++){
+      var version = preds[p];
+      var oldNode = this.getNodeById(preds[p],this.props.repo.DAG);
+      var name = oldNode.UUID;
+      var nodeclass = "";
+      var log = "";
+      var note = 'test note';
+
+      var newNode = {
+        label: version + ': ' + name.substr(0, 5),
+        css: nodeclass,
+        rx: 5,
+        ry: 5,
+        log: log,
+        note: note,
+        fullname: version + ': ' + name,
+        uuid: name,
+        id: "node" + version,
+        expandedChildren: null,
+        collapsedChildren: null,
+        isMerge: false,
+        isCollapsible: false
+      };
+      partialDag.setNode(version, newNode);
+    }
+
+    // finally, draw the graph
+    this.drawDag(partialDag);
+
+  },
+
+  drawDag: function(partialDag){
+    var nodes = partialDag.nodes();
+    // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
+    nodes.reverse().forEach(function (n) {
+      if (partialDag.node(n) && partialDag.node(n).expandedChildren) {
+        collapseChildren(n)
+      }
+    });
+    this.update(partialDag);
+    this.fitDAG(partialDag);
   },
 
   drawPartialTree: function(that, props, selectedNode) {
@@ -304,46 +402,46 @@ initDag: function (t, props) {
 
   // sets merges and all their predecessors to be uncollapsible
   // gives merges a "merge" class
-  dag.nodes().forEach(function (n) {
-
-    if (dag.predecessors(n).length > 1) {
-      dag.node(n).isMerge = true;
-      dag.node(n).class = dag.node(n).class + " " + "merge";
-      dag.node(n).isCollapsible = false;
-       mydagrepo.findAllPredecessors(n).forEach(function (p) {
-        dag.node(p).isCollapsible = false;
-      });
-    }
-  });
+  // dag.nodes().forEach(function (n) {
+  //
+  //   if (dag.predecessors(n).length > 1) {
+  //     dag.node(n).isMerge = true;
+  //     dag.node(n).class = dag.node(n).class + " " + "merge";
+  //     dag.node(n).isCollapsible = false;
+  //      mydagrepo.findAllPredecessors(n).forEach(function (p) {
+  //       dag.node(p).isCollapsible = false;
+  //     });
+  //   }
+  // });
 
   // gives parents a variable to access their collapsible children  --- start, no render yet
-  dag.nodes().forEach(function (n) {
-    //collapsibleChildren will be a dictionary with key being the node name (that you can call dag.node() with) and the value being properties of that node
-    var collapsibleChildren = {};
-    dag.successors(n).forEach(function (c) {
-      if (dag.node(c).isCollapsible) {
-        //adds the node properties to collapsibleChildren so that it can be used to add the node back later
-        collapsibleChildren[c] = dag.node(c);
-      }
-    });
-    // only give it expandedChildren if it has collapsible children. otherwise it is kept null (and not set to {})
-    if (Object.getOwnPropertyNames(collapsibleChildren).length !== 0) {
-      dag.node(n).expandedChildren = collapsibleChildren;
-      dag.node(n).class = dag.node(n).class + " " + "expanded";
-    }
-  });
+  // dag.nodes().forEach(function (n) {
+  //   //collapsibleChildren will be a dictionary with key being the node name (that you can call dag.node() with) and the value being properties of that node
+  //   var collapsibleChildren = {};
+  //   dag.successors(n).forEach(function (c) {
+  //     if (dag.node(c).isCollapsible) {
+  //       //adds the node properties to collapsibleChildren so that it can be used to add the node back later
+  //       collapsibleChildren[c] = dag.node(c);
+  //     }
+  //   });
+  //   // only give it expandedChildren if it has collapsible children. otherwise it is kept null (and not set to {})
+  //   if (Object.getOwnPropertyNames(collapsibleChildren).length !== 0) {
+  //     dag.node(n).expandedChildren = collapsibleChildren;
+  //     dag.node(n).class = dag.node(n).class + " " + "expanded";
+  //   }
+  // });
 
   // kludge for fixing edge crossings created by the initial dagre render:
   // collapse, then expand
-  this.collapseGraph();  // collapse graph is rendering the graph
-  this.scrollToCurrent();
+   this.collapseGraph();  // collapse graph is rendering the graph
+   this.scrollToCurrent();
 
   //set transition for future collapsing and expanding -- stop, here render took place
-  dag.graph().transition = function (selection) {
-    return selection.transition().duration(300);
-  };
+  // dag.graph().transition = function (selection) {
+  //   return selection.transition().duration(300);
+  // };
 
-  mydagrepo.nodeList = dag.nodes();
+  mydagrepo.nodeList = JSON.parse(JSON.stringify(dag._nodes));
   this.fitDAG();
 },
 
@@ -352,7 +450,7 @@ clear: function(){
   svg.selectAll("*").remove();
 },
 
-update: function (nodeset = null) {
+update: function (dagGiven = null) {
   var admin = this.context.router.getCurrentQuery().admin;
   var self = this;
   //renders the dag
@@ -377,7 +475,12 @@ update: function (nodeset = null) {
     dagreD3.util.applyStyle(path, edge[type + "Style"]);
   };
 
-  dagreRenderer(elementHolderLayer, dag);
+  if (dagGiven){
+    dagreRenderer(elementHolderLayer, dagGiven);
+  }
+  else {
+    dagreRenderer(elementHolderLayer, dag);
+  }
 
   d3.select(".dag_note").remove();
 
@@ -689,7 +792,6 @@ collapseGraph: function () {
 // collapses DAG given by nodes
 collapsePartialGraph: function (nodes, selectedNode) {
   this.clear();
-  mydagrepo.resetGraph(dag);
   // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
   nodes.reverse().forEach(function (n) {
     if (dag.node(n) && dag.node(n).expandedChildren) {

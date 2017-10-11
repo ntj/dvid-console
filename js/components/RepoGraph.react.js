@@ -40,11 +40,9 @@ var RepoGraph  = React.createClass({
   },
 
   showGraph: function(){
-
     this.setState({
       graphVisible: true,
     });
-
   },
 
   drawGraph: function(props) {
