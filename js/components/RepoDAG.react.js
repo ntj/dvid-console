@@ -206,18 +206,53 @@ var RepoDAGDisplay = React.createClass({
     }
 
     // finally, draw the graph
-    this.drawDag(partialDag);
+    this.drawTrunk(partialDag);
+
+  },
+
+  drawTrunk: function(partialDag){
+    var nodes = partialDag.nodes();
+
+    // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
+    nodes.forEach(function (n) {
+      if (partialDag.node(n) && partialDag.node(n).expandedChildren) {
+        collapseChildren(n)
+      }
+    });
+
+    var first=null;
+    for (var i = 1; i < nodes.length; i++){
+      first = nodes[i-1];
+      partialDag.setEdge(first,nodes[i]);
+    }
+
+    this.update(partialDag);
+    this.fitDAG(partialDag);
+  },
+
+  drawSubtree: function(partialDag){
 
   },
 
   drawDag: function(partialDag){
     var nodes = partialDag.nodes();
+
     // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
     nodes.reverse().forEach(function (n) {
       if (partialDag.node(n) && partialDag.node(n).expandedChildren) {
         collapseChildren(n)
       }
+
+      // draw the edges
+      $.each(n.Children, function (c) {
+        partialDag.setEdge(version, n.Children[c], {
+          lineInterpolate: 'basis',
+          arrowheadStyle: "fill: #111",
+          id: version + "-" + n.Children[c]
+        });
+      });
     });
+
     this.update(partialDag);
     this.fitDAG(partialDag);
   },
