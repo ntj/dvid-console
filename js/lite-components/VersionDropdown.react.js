@@ -10,7 +10,7 @@ import Autocomplete from 'react-autocomplete';
  * Information about passing state information
  * https://medium.com/@ruthmpardee/passing-data-between-react-components-103ad82ebd17
  */
-export default class MyComplete extends React.Component {
+export default class VersionDropdown extends React.Component {
 
   constructor(props, context) {
     super(props, context);
