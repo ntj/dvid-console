@@ -12,7 +12,7 @@ export default class BranchDropdown extends React.Component {
     this.state = {
       // Current value of the select field
       currentBranch: this.getFirstBranch(),
-      autocompleteData: this.getBranches()
+      autocompleteData: this.getCompleteData()
     };
 
     // Bind `this` context to functions of the class
@@ -50,38 +50,45 @@ export default class BranchDropdown extends React.Component {
 
 
   getFirstBranch() {
-    var branches = this.getBranches();
-    if (branches.length > 0) {
-      return branches[0];
-    }
-    return null;
+    // var branches = this.getBranches();
+    // if (branches.length > 0) {
+    //   return branches[0];
+    // }
+    // return null;
+    return "Show all";
   }
 
   /**
    * Get the label and the value to fill the dropdown box
    */
-  getBranches() {
-    return Object.keys(this.getCompleteData());
-  }
+  // getCompleteData() {
+  //   // var keys = Object.keys(this.props.repo.DAG.Nodes);
+  //   var values = this.props.myNodes;
+  //   var keys = Object.keys(values);
+  //   var result = {};
+  //   for (var i = 0; i < keys.length; i++) {
+  //     var tBranch = values[keys[i]].Branch;
+  //     if (tBranch in result) { // result does have the branch name already -> add another node to the list of branch nodes
+  //       result[tBranch].push(values[keys[i]].UUID)
+  //     }
+  //     else { // add new branch
+  //       result[tBranch] = []
+  //     }
+  //   }
+  //   return result;
+  // }
 
-  /**
-   * Get the label and the value to fill the dropdown box
-   */
   getCompleteData() {
-    // var keys = Object.keys(this.props.repo.DAG.Nodes);
-    var values = this.props.myNodes;
-    var keys = Object.keys(values);
-    var result = {};
-    for (var i = 0; i < keys.length; i++) {
-      var tBranch = values[keys[i]].Branch;
-      if (tBranch in result) { // result does have the branch name already -> add another node to the list of branch nodes
-        result[tBranch].push(values[keys[i]].UUID)
+      var values = this.props.myNodes;
+      var keys = Object.keys(values);
+      var result = ['Show all'];
+      for (var i = 0; i < keys.length; i++) {
+        var tBranch = values[keys[i]].Branch;
+        if (result.indexOf(tBranch) === -1) { // result does have the branch name already -> add another node to the list of branch nodes
+          result.push(tBranch);
+        }
       }
-      else { // add new branch
-        result[tBranch] = []
-      }
-    }
-    return result;
+      return result;
   }
 
   /**

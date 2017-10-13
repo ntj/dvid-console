@@ -220,74 +220,85 @@ var RepoDAGDisplay = React.createClass({
   myCallbackBranches: function (selectedBranch) {
     this.clear();
 
-    // // create new graph
-    // var partialDag = new dagreD3.graphlib.Graph({
-    //   compound: true,
-    //   multigraph: true
-    // })
-    //     .setGraph({})
-    //     .setDefaultEdgeLabel(function () {
-    //       return {};
-    //     });
-    //
-    // // add partial nodes to new graph -- first the root node
-    // var version = selectedNode.VersionID;
-    // var name = selectedNode.UUID;
-    // var nodeclass = "";
-    // var log = "";
-    // var note = 'test note';
-    //
-    // var rootNode = {
-    //   label: version + ': ' + name.substr(0, 5),
-    //   css: nodeclass,
-    //   rx: 5,
-    //   ry: 5,
-    //   log: log,
-    //   note: note,
-    //   fullname: version + ': ' + name,
-    //   uuid: name,
-    //   id: "node" + version,
-    //   expandedChildren: null,
-    //   collapsedChildren: null,
-    //   isMerge: false,
-    //   isCollapsible: false
-    // };
-    // partialDag.setNode(version, rootNode);
-    //
-    // // Get all the predecessors of a node
-    // var preds = mydagrepo.findAllPredecessors(version);
-    //
-    // for (var p = 0; p < preds.length; p++){
-    //   var version = preds[p];
-    //   var oldNode = this.getNodeById(preds[p],this.props.repo.DAG);
-    //   var name = oldNode.UUID;
-    //   var nodeclass = "";
-    //   var log = "";
-    //   var note = 'test note';
-    //
-    //   var newNode = {
-    //     label: version + ': ' + name.substr(0, 5),
-    //     css: nodeclass,
-    //     rx: 5,
-    //     ry: 5,
-    //     log: log,
-    //     note: note,
-    //     fullname: version + ': ' + name,
-    //     uuid: name,
-    //     id: "node" + version,
-    //     expandedChildren: null,
-    //     collapsedChildren: null,
-    //     isMerge: false,
-    //     isCollapsible: false
-    //   };
-    //   partialDag.setNode(version, newNode);
-    // }
+    if (selectedBranch == 'Show All'){
+      this.update(dag);
+      this.fitDAG(dag);
+      return;
+    }
+    else {
+      // create new graph
+      var partialDag = new dagreD3.graphlib.Graph({
+        compound: true,
+        multigraph: true
+      }).setGraph({})
+          .setDefaultEdgeLabel(
+              function () {
+                return {};
+              }
+          );
 
-    // finally, draw the graph
-    this.drawTrunk(partialDag);
-    this.drawSubtree(partialDag,rootNode.label.substr(0,1));
-    this.update(partialDag);
-    this.fitDAG(partialDag);
+      var tNodes = this.props.repo.DAG.Nodes;
+      var rootNode = null;
+      for (var key in tNodes){
+        if (tNodes[key].Branch === ""){
+          rootNode = tNodes[key];
+          break;
+        }
+      }
+
+      if (rootNode){
+        var version = rootNode.VersionID;
+        var name = rootNode.UUID;
+        var nodeclass = "";
+        var log = "";
+        var note = 'test note';
+
+        var root = {
+          label: version + ': ' + name.substr(0, 5),
+          css: nodeclass,
+          rx: 5,
+          ry: 5,
+          log: log,
+          note: note,
+          fullname: version + ': ' + name,
+          uuid: name,
+          id: "node" + version,
+          expandedChildren: null,
+          collapsedChildren: null,
+          isMerge: false,
+          isCollapsible: false
+        };
+
+        partialDag.setNode(version, root);
+        this.collectChildren(rootNode, partialDag,[]);
+        this.update(partialDag);
+        this.fitDAG(partialDag);
+      }
+    }
+  },
+
+  // get the actual node with all information from the original DAG
+  getNodeByVersion: function(id){
+    var nodes = this.props.repo.DAG.Nodes;
+    var keys = Object.keys(nodes);
+
+    for (var k = 0; k < keys.length; k++){
+      if(nodes[keys[k]].VersionID == id){
+        return nodes[keys[k]];
+      }
+    }
+    return null;
+  },
+
+  // traverse through DAG and collect child nodes
+  collectChildren: function(node, paritalDag){
+    var children = node.Children;
+    for (var c = 0; c < children.length; c++){
+      var tmpNode = this.getNodeByVersion(children[c]);
+      paritalDag.setEdge(node.VersionID,children[c]);
+      paritalDag.setNode(tmpNode);
+      this.collectChildren(tmpNode, paritalDag);
+    }
   },
 
   drawTrunk: function(partialDag){
@@ -481,7 +492,6 @@ var RepoDAGDisplay = React.createClass({
   },
 
   update: function (currentDag) {
-    console.log('[Debug update]');
     var admin = this.context.router.getCurrentQuery().admin;
     var self = this;
     //renders the dag
