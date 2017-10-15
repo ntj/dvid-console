@@ -1,6 +1,7 @@
 /neuroglancer
-lite-dist
+lite-dist/
 dist
+dist/neuroglancer
 bindata.go
 node_modules
 build
@@ -8,3 +9,5 @@ build
 *.tar.gz
 npm-debug.log
 modernizr-output.js
+package-lock.json
+.idea/
