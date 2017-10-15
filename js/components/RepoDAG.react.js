@@ -270,7 +270,7 @@ var RepoDAGDisplay = React.createClass({
         };
 
         partialDag.setNode(version, root);
-        this.collectChildren(rootNode, partialDag,[]);
+        //this.collectChildren(rootNode, partialDag,dag);
         this.update(partialDag);
         this.fitDAG(partialDag);
       }
@@ -291,13 +291,13 @@ var RepoDAGDisplay = React.createClass({
   },
 
   // traverse through DAG and collect child nodes
-  collectChildren: function(node, paritalDag){
+  collectChildren: function(node, paritalDag, dag){
     var children = node.Children;
     for (var c = 0; c < children.length; c++){
       var tmpNode = this.getNodeByVersion(children[c]);
       paritalDag.setEdge(node.VersionID,children[c]);
-      paritalDag.setNode(tmpNode);
-      this.collectChildren(tmpNode, paritalDag);
+      paritalDag.setNode(children[c],dag._nodes[tmpNode.VersionID]);
+      this.collectChildren(tmpNode, paritalDag, dag);
     }
   },
 
@@ -515,7 +515,7 @@ var RepoDAGDisplay = React.createClass({
           .style("stroke-linejoin", "round");
       dagreD3.util.applyStyle(path, edge[type + "Style"]);
     };
-
+    console.log('1');
     dagreRenderer(elementHolderLayer, currentDag);
 
     d3.select(".dag_note").remove();
@@ -565,6 +565,7 @@ var RepoDAGDisplay = React.createClass({
         .append("xhtml:span")
         .attr("class", `unlocked fa fa-unlock ${forbidden_toggle}`);
 
+    console.log('2');
     // add navigation listener
     elementHolderLayer.selectAll("g.node rect")
         .on("mouseenter", function (v) {
@@ -593,6 +594,7 @@ var RepoDAGDisplay = React.createClass({
           }
         });
 
+    console.log('3');
     // add commit and branch actions, if allowed
     if (this.isEditable()) {
       elementHolderLayer.selectAll("g.node foreignObject span")
@@ -639,6 +641,8 @@ var RepoDAGDisplay = React.createClass({
             }
           });
     }
+
+    console.log('4');
 
     var nodeDrag = d3.behavior.drag()
         .on("drag", function (d) {

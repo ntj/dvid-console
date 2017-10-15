@@ -29,6 +29,8 @@ export default class BranchDropdown extends React.Component {
    * @return {Event} Event of JavaScript can be used as usual.
    */
   onChange(e) {
+    console.log('e.target.value ' + e.target.value);
+    console.log('e.target.currentbranch ' + e.target.currentBranch);
     this.setState({
       currentBranch: e.target.value
     });
