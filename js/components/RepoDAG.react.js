@@ -239,6 +239,8 @@ var RepoDAGDisplay = React.createClass({
       var tNodes = this.props.repo.DAG.Nodes;
       var branchNodes = [];
       var branchKeys = [];
+      var branchVersionIds = [];
+      var branchChildren = [];
 
       // collect the branch nodes
       var keys = Object.keys(tNodes);
@@ -253,62 +255,47 @@ var RepoDAGDisplay = React.createClass({
       if (branchNodes.length > 0){
         for (var b = 0; b < branchNodes.length; b++){
           var tmpNode = branchNodes[b];
-          // check, if parent node is root node, if so, add root
-          if ((this.getNodeByVersion(tmpNode.Parents[0])).Branch !== selectedBranch){
-            // we found root of the branch -> add it to the tree
-            partialDAG.setNode(tmpNode.Parents[0], dag._nodes[tmpNode.Parents[0]]);
-          }
+          branchVersionIds.push(tmpNode.VersionID);
+          // // check, if parent node is root node, if so, add root
+          // if ((this.getNodeByVersion(tmpNode.Parents[0])).Branch !== selectedBranch){
+          //   // we found root of the branch -> add it to the tree
+          //   partialDAG.setNode(tmpNode.Parents[0], dag._nodes[tmpNode.Parents[0]]);
+          // }
           partialDAG.setNode(tmpNode.VersionID, dag._nodes[tmpNode.VersionID]);
-          partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID,
-              {
-                lineInterpolate: 'basis',
-                arrowheadStyle: "fill: #111",
-                id: tmpNode.Parents[0] + "-" + tmpNode.VersionID
-              }
-          );
+
+          var tChildren = tmpNode.Children;
+          for (var i=0; i < tChildren.length; i++){
+            branchChildren.push(tChildren[i]);
+          }
+
+          // Make sure, we are not drawing the edge to the root node (which is of different branch)
+          if (this.getNodeByVersion(tmpNode.Parents[0]).Branch === selectedBranch){
+            partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID,
+                {
+                  lineInterpolate: 'basis',
+                  arrowheadStyle: "fill: #111",
+                  id: tmpNode.Parents[0] + "-" + tmpNode.VersionID
+                }
+            );
+          }
+          else {
+            // root node belongs to another branch -> show which branch
+
+          }
+        }
+      }
+
+      // draw the edged to branches which are not displayed
+      for (var c = 0; c < branchChildren.length; c++){
+        if (branchVersionIds.indexOf(branchChildren[c]) == -1){
+            //found a child, which is not part of the branch
+            console.log(branchChildren[c]);
         }
       }
 
       this.update(partialDAG);
       this.fitDAG(partialDAG);
 
-      // var rootNode = null;
-      // for (var key in tNodes){
-      //   if (tNodes[key].Branch === ""){
-      //     rootNode = tNodes[key];
-      //     break;
-      //   }
-      // }
-      //
-      // if (rootNode){
-      //   var version = rootNode.VersionID;
-      //   var name = rootNode.UUID;
-      //   var nodeclass = "";
-      //   var log = "";
-      //   var note = 'test note';
-      //
-      //   var root = {
-      //     label: version + ': ' + name.substr(0, 5),
-      //     css: nodeclass,
-      //     rx: 5,
-      //     ry: 5,
-      //     log: log,
-      //     note: note,
-      //     fullname: version + ': ' + name,
-      //     uuid: name,
-      //     id: "node" + version,
-      //     expandedChildren: null,
-      //     collapsedChildren: null,
-      //     isMerge: false,
-      //     isCollapsible: false
-      //   };
-      //
-      //   partialDAG.setNode(version, root);
-
-      // branch can start from the top or from the middle in the tree --> find highest node, which is actually not yet
-      // part of the branch - can be root or somewhere in the tree
-      // this.drawBranch(root, partialDAG, dag, selectedBranch);
-      //this.collectChildren(rootNode, partialDAG,dag);
       }
   },
 
