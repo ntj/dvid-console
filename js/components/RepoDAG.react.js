@@ -311,7 +311,13 @@ var RepoDAGDisplay = React.createClass({
        if (nodes[keys[i]].Branch === selectedBranch){
          var tmpNode = nodes[keys[i]];
          partialDAG.setNode(tmpNode.VersionID, dag._nodes[tmpNode.VersionID]);
-         partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID);
+         partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID,
+             {
+               lineInterpolate: 'basis',
+               arrowheadStyle: "fill: #111",
+               id: tmpNode.VersionID + "-" + 'stuff'
+             }
+         );
        }
      }
   },
