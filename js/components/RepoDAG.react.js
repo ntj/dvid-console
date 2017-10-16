@@ -144,78 +144,78 @@ var RepoDAGDisplay = React.createClass({
     return node;
   },
 
-  myCallback: function (selectedNode) {
-    this.clear();
-
-    // create new graph
-    var partialDag = new dagreD3.graphlib.Graph({
-      compound: true,
-      multigraph: true
-    })
-    .setGraph({})
-    .setDefaultEdgeLabel(function () {
-      return {};
-    });
-
-    // add partial nodes to new graph -- first the root node
-    var version = selectedNode.VersionID;
-    var name = selectedNode.UUID;
-    var nodeclass = "";
-    var log = "";
-    var note = 'test note';
-
-    var rootNode = {
-      label: version + ': ' + name.substr(0, 5),
-      css: nodeclass,
-      rx: 5,
-      ry: 5,
-      log: log,
-      note: note,
-      fullname: version + ': ' + name,
-      uuid: name,
-      id: "node" + version,
-      expandedChildren: null,
-      collapsedChildren: null,
-      isMerge: false,
-      isCollapsible: false
-    };
-    partialDag.setNode(version, rootNode);
-
-    // Get all the predecessors of a node
-    var preds = mydagrepo.findAllPredecessors(version);
-
-    for (var p = 0; p < preds.length; p++){
-      var version = preds[p];
-      var oldNode = this.getNodeById(preds[p],this.props.repo.DAG);
-      var name = oldNode.UUID;
-      var nodeclass = "";
-      var log = "";
-      var note = 'test note';
-
-      var newNode = {
-        label: version + ': ' + name.substr(0, 5),
-        css: nodeclass,
-        rx: 5,
-        ry: 5,
-        log: log,
-        note: note,
-        fullname: version + ': ' + name,
-        uuid: name,
-        id: "node" + version,
-        expandedChildren: null,
-        collapsedChildren: null,
-        isMerge: false,
-        isCollapsible: false
-      };
-      partialDag.setNode(version, newNode);
-    }
-
-    // finally, draw the graph
-    this.drawTrunk(partialDag);
-    this.drawSubtree(partialDag,rootNode.label.substr(0,1));
-    this.update(partialDag);
-    this.fitDAG(partialDag);
-  },
+  // myCallback: function (selectedNode) {
+  //   this.clear();
+  //
+  //   // create new graph
+  //   var partialDag = new dagreD3.graphlib.Graph({
+  //     compound: true,
+  //     multigraph: true
+  //   })
+  //   .setGraph({})
+  //   .setDefaultEdgeLabel(function () {
+  //     return {};
+  //   });
+  //
+  //   // add partial nodes to new graph -- first the root node
+  //   var version = selectedNode.VersionID;
+  //   var name = selectedNode.UUID;
+  //   var nodeclass = "";
+  //   var log = "";
+  //   var note = 'test note';
+  //
+  //   var rootNode = {
+  //     label: version + ': ' + name.substr(0, 5),
+  //     css: nodeclass,
+  //     rx: 5,
+  //     ry: 5,
+  //     log: log,
+  //     note: note,
+  //     fullname: version + ': ' + name,
+  //     uuid: name,
+  //     id: "node" + version,
+  //     expandedChildren: null,
+  //     collapsedChildren: null,
+  //     isMerge: false,
+  //     isCollapsible: false
+  //   };
+  //   partialDAG.setNode(version, rootNode);
+  //
+  //   // Get all the predecessors of a node
+  //   var preds = mydagrepo.findAllPredecessors(version);
+  //
+  //   for (var p = 0; p < preds.length; p++){
+  //     var version = preds[p];
+  //     var oldNode = this.getNodeById(preds[p],this.props.repo.DAG);
+  //     var name = oldNode.UUID;
+  //     var nodeclass = "";
+  //     var log = "";
+  //     var note = 'test note';
+  //
+  //     var newNode = {
+  //       label: version + ': ' + name.substr(0, 5),
+  //       css: nodeclass,
+  //       rx: 5,
+  //       ry: 5,
+  //       log: log,
+  //       note: note,
+  //       fullname: version + ': ' + name,
+  //       uuid: name,
+  //       id: "node" + version,
+  //       expandedChildren: null,
+  //       collapsedChildren: null,
+  //       isMerge: false,
+  //       isCollapsible: false
+  //     };
+  //     partialDAG.setNode(version, newNode);
+  //   }
+  //
+  //   // finally, draw the graph
+  //   this.drawTrunk(partialDAG);
+  //   this.drawSubtree(partialDAG,rootNode.label.substr(0,1));
+  //   this.update(partialDAG);
+  //   this.fitDAG(partialDAG);
+  // },
 
   myCallbackBranches: function (selectedBranch) {
     this.clear();
@@ -227,7 +227,7 @@ var RepoDAGDisplay = React.createClass({
     }
     else {
       // create new graph
-      var partialDag = new dagreD3.graphlib.Graph({
+      var partialDAG = new dagreD3.graphlib.Graph({
         compound: true,
         multigraph: true
       }).setGraph({})
@@ -236,46 +236,80 @@ var RepoDAGDisplay = React.createClass({
                 return {};
               }
           );
-
       var tNodes = this.props.repo.DAG.Nodes;
-      var rootNode = null;
-      for (var key in tNodes){
-        if (tNodes[key].Branch === ""){
-          rootNode = tNodes[key];
-          break;
+      var branchNodes = [];
+      var branchKeys = [];
+
+      // collect the branch nodes
+      var keys = Object.keys(tNodes);
+      for (var k=0; k < keys.length; k++){
+          if ((tNodes[keys[k]]).Branch == selectedBranch){
+              branchNodes.push(tNodes[keys[k]]);
+              branchKeys.push(keys[k]);
+          }
+      }
+
+      // add branch nodes and edges to the partial DAG
+      if (branchNodes.length > 0){
+        for (var b = 0; b < branchNodes.length; b++){
+          var tmpNode = branchNodes[b];
+          // check, if parent node is root node, if so, add root
+          if ((this.getNodeByVersion(tmpNode.Parents[0])).Branch !== selectedBranch){
+            // we found root of the branch -> add it to the tree
+            partialDAG.setNode(tmpNode.Parents[0], dag._nodes[tmpNode.Parents[0]]);
+          }
+          partialDAG.setNode(tmpNode.VersionID, dag._nodes[tmpNode.VersionID]);
+          partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID,
+              {
+                lineInterpolate: 'basis',
+                arrowheadStyle: "fill: #111",
+                id: tmpNode.Parents[0] + "-" + tmpNode.VersionID
+              }
+          );
         }
       }
 
-      if (rootNode){
-        var version = rootNode.VersionID;
-        var name = rootNode.UUID;
-        var nodeclass = "";
-        var log = "";
-        var note = 'test note';
+      this.update(partialDAG);
+      this.fitDAG(partialDAG);
 
-        var root = {
-          label: version + ': ' + name.substr(0, 5),
-          css: nodeclass,
-          rx: 5,
-          ry: 5,
-          log: log,
-          note: note,
-          fullname: version + ': ' + name,
-          uuid: name,
-          id: "node" + version,
-          expandedChildren: null,
-          collapsedChildren: null,
-          isMerge: false,
-          isCollapsible: false
-        };
+      // var rootNode = null;
+      // for (var key in tNodes){
+      //   if (tNodes[key].Branch === ""){
+      //     rootNode = tNodes[key];
+      //     break;
+      //   }
+      // }
+      //
+      // if (rootNode){
+      //   var version = rootNode.VersionID;
+      //   var name = rootNode.UUID;
+      //   var nodeclass = "";
+      //   var log = "";
+      //   var note = 'test note';
+      //
+      //   var root = {
+      //     label: version + ': ' + name.substr(0, 5),
+      //     css: nodeclass,
+      //     rx: 5,
+      //     ry: 5,
+      //     log: log,
+      //     note: note,
+      //     fullname: version + ': ' + name,
+      //     uuid: name,
+      //     id: "node" + version,
+      //     expandedChildren: null,
+      //     collapsedChildren: null,
+      //     isMerge: false,
+      //     isCollapsible: false
+      //   };
+      //
+      //   partialDAG.setNode(version, root);
 
-        partialDag.setNode(version, root);
-        this.drawBranch(root, partialDag, dag, selectedBranch);
-        //this.collectChildren(rootNode, partialDag,dag);
-        this.update(partialDag);
-        this.fitDAG(partialDag);
+      // branch can start from the top or from the middle in the tree --> find highest node, which is actually not yet
+      // part of the branch - can be root or somewhere in the tree
+      // this.drawBranch(root, partialDAG, dag, selectedBranch);
+      //this.collectChildren(rootNode, partialDAG,dag);
       }
-    }
   },
 
   // get the actual node with all information from the original DAG
@@ -292,13 +326,13 @@ var RepoDAGDisplay = React.createClass({
   },
 
   // traverse through DAG and collect child nodes
-  collectChildren: function(node, partialDag, dag){
+  collectChildren: function(node, partialDAG, dag){
     var children = node.Children;
     for (var c = 0; c < children.length; c++){
       var tmpNode = this.getNodeByVersion(children[c]);
-      partialDag.setEdge(node.VersionID,children[c]);
-      partialDag.setNode(children[c],dag._nodes[tmpNode.VersionID]);
-      this.collectChildren(tmpNode, partialDag, dag);
+      partialDAG.setEdge(node.VersionID,children[c]);
+      partialDAG.setNode(children[c],dag._nodes[tmpNode.VersionID]);
+      this.collectChildren(tmpNode, partialDAG, dag);
     }
   },
 
@@ -322,12 +356,12 @@ var RepoDAGDisplay = React.createClass({
      }
   },
 
-  drawTrunk: function(partialDag){
-    var nodes = partialDag.nodes();
+  drawTrunk: function(partialDAG){
+    var nodes = partialDAG.nodes();
 
     // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
     nodes.forEach(function (n) {
-      if (partialDag.node(n) && partialDag.node(n).expandedChildren) {
+      if (partialDAG.node(n) && partialDAG.node(n).expandedChildren) {
         collapseChildren(n)
       }
     });
@@ -336,23 +370,23 @@ var RepoDAGDisplay = React.createClass({
     var first=null;
     for (var i = 1; i < nodes.length; i++){
       first = nodes[i-1];
-      partialDag.setEdge(first,nodes[i]);
+      partialDAG.setEdge(first,nodes[i]);
     }
   },
 
-  setEdgeSubtree: function(partialDag, edges,rootId){
+  setEdgeSubtree: function(partialDAG, edges,rootId){
     for (var i = 0; i < edges.length; i++){
       if (edges[i].v == rootId){
-        partialDag.setNode(edges[i].w, this.initialDag._nodes[edges[i].w]);
-        partialDag.setEdge(edges[i].v, edges[i].w);
-        this.setEdgeSubtree(partialDag, edges,edges[i].w);
+        partialDAG.setNode(edges[i].w, this.initialDag._nodes[edges[i].w]);
+        partialDAG.setEdge(edges[i].v, edges[i].w);
+        this.setEdgeSubtree(partialDAG, edges,edges[i].w);
       }
     }
   },
 
-  drawSubtree: function(partialDag,rootId){
+  drawSubtree: function(partialDAG,rootId){
     var edges = this.initialDag.edges();
-    this.setEdgeSubtree(partialDag,edges,rootId);
+    this.setEdgeSubtree(partialDAG,edges,rootId);
   },
 
   initDag: function (t, props) {
