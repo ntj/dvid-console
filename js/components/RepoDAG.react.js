@@ -315,7 +315,7 @@ var RepoDAGDisplay = React.createClass({
              {
                lineInterpolate: 'basis',
                arrowheadStyle: "fill: #111",
-               id: tmpNode.VersionID + "-" + 'stuff'
+               id: tmpNode.Parents[0] + "-" + tmpNode.VersionID
              }
          );
        }
