@@ -58,16 +58,12 @@ mydagrepo.resetGraph = function(dag){
   var backupKeys = Object.keys(mydagrepo.nodeList);
   var dagKeys = Object.keys(dag.Nodes);
   // if (dagKeys.length < backupKeys.length){
-    for (var k = 0; k < dagKeys.length; k++){
-      // dag.removeNode(k);
-    }
-    for (var k = 0; k < backupKeys.length; k++){
-      dag.setNode(mydagrepo[backupKeys[k]]);
-    }
-  // }
-  // else{
-  //   console.log('this is same tree');
-  // }
+  for (var k = 0; k < dagKeys.length; k++){
+    // dag.removeNode(k);
+  }
+  for (var k = 0; k < backupKeys.length; k++){
+    dag.setNode(mydagrepo[backupKeys[k]]);
+  }
 };
 
 mydagrepo.initialDag = null;
@@ -241,6 +237,7 @@ var RepoDAGDisplay = React.createClass({
       var branchKeys = [];
       var branchVersionIds = [];
       var branchChildren = [];
+      var otherBranches = [];
 
       // collect the branch nodes
       var keys = Object.keys(tNodes);
@@ -265,7 +262,10 @@ var RepoDAGDisplay = React.createClass({
 
           var tChildren = tmpNode.Children;
           for (var i=0; i < tChildren.length; i++){
-            branchChildren.push(tChildren[i]);
+            var parentChild = {};
+            parentChild.parent = tmpNode.VersionID;
+            parentChild.child = tChildren[i];
+            branchChildren.push(parentChild);
           }
 
           // Make sure, we are not drawing the edge to the root node (which is of different branch)
@@ -289,13 +289,22 @@ var RepoDAGDisplay = React.createClass({
       for (var c = 0; c < branchChildren.length; c++){
         if (branchVersionIds.indexOf(branchChildren[c]) == -1){
             //found a child, which is not part of the branch
-            console.log(branchChildren[c]);
+            otherBranches.push(branchChildren[c].child);
         }
+      }
+
+      // draw some lines to indicate, that there are other branches in the tree
+      if (otherBranches.length > 0){
+        var tmp = otherBranches[0];
+
+        // draw a line to other branches at other branches
+        // draw a line to other branches at other branches
+        var myElem = d3.select('#node' + tmp.parent);
+        myElem..append("line").attr("x1", 5).attr("y1", 5).attr("x2", 50).attr("y2", 50);
       }
 
       this.update(partialDAG);
       this.fitDAG(partialDAG);
-
       }
   },
 
@@ -360,6 +369,7 @@ var RepoDAGDisplay = React.createClass({
       partialDAG.setEdge(first,nodes[i]);
     }
   },
+
 
   setEdgeSubtree: function(partialDAG, edges,rootId){
     for (var i = 0; i < edges.length; i++){
@@ -486,12 +496,11 @@ var RepoDAGDisplay = React.createClass({
     // sets merges and all their predecessors to be uncollapsible
     // gives merges a "merge" class
     dag.nodes().forEach(function (n) {
-
       if (dag.predecessors(n).length > 1) {
         dag.node(n).isMerge = true;
         dag.node(n).class = dag.node(n).class + " " + "merge";
         dag.node(n).isCollapsible = false;
-         mydagrepo.findAllPredecessors(n).forEach(function (p) {
+        mydagrepo.findAllPredecessors(n).forEach(function (p) {
           dag.node(p).isCollapsible = false;
         });
       }
@@ -524,7 +533,6 @@ var RepoDAGDisplay = React.createClass({
       return selection.transition().duration(300);
     };
 
-    this.initialDag = dag;
     this.fitDAG();
   },
 
