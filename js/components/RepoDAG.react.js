@@ -220,7 +220,7 @@ var RepoDAGDisplay = React.createClass({
   myCallbackBranches: function (selectedBranch) {
     this.clear();
 
-    if (selectedBranch == 'Show All'){
+    if (selectedBranch == 'Show all'){
       this.update(dag);
       this.fitDAG(dag);
       return;
