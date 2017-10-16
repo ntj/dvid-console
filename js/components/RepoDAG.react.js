@@ -270,7 +270,7 @@ var RepoDAGDisplay = React.createClass({
         };
 
         partialDag.setNode(version, root);
-        this.drawBranch(root, partialDag, selectedBranch);
+        this.drawBranch(root, partialDag, dag, selectedBranch);
         //this.collectChildren(rootNode, partialDag,dag);
         this.update(partialDag);
         this.fitDAG(partialDag);
@@ -302,12 +302,16 @@ var RepoDAGDisplay = React.createClass({
     }
   },
 
-  drawBranch: function(node, partialDAG,selectedBranch){
+
+  // collect all nodes, which belong to a branch
+  drawBranch: function(node, partialDAG, dag, selectedBranch){
      var nodes = this.props.repo.DAG.Nodes;
      var keys = Object.keys(nodes);
      for (var i=0; i < keys.length; i++){
        if (nodes[keys[i]].Branch === selectedBranch){
-         partialDAG.setNode(nodes[keys[i]]);
+         var tmpNode = nodes[keys[i]];
+         partialDAG.setNode(tmpNode.VersionID, dag._nodes[tmpNode.VersionID]);
+         partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID);
        }
      }
   },

@@ -47,7 +47,7 @@ export default class BranchDropdown extends React.Component {
       currentBranch: val,
     });
 
-    this.props.callbackFromParent(this.state.currentBranch);
+    this.props.callbackFromParent(val);
   }
 
 
