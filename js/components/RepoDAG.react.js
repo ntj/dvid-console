@@ -13,60 +13,9 @@ import ModalActions from '../actions/ModalActions';
 import {ModalTypes} from '../stores/ModalStore';
 import DAGmodals from '../components/DAGmodals.react.js';
 import stringify from 'json-stable-stringify';
-import VersionDropdown from '../lite-components/VersionDropdown.react.js';
 import BranchDropdown from '../lite-components/BranchDropdown.react.js';
 
 var dag, elementHolderLayer, svgBackground;
-
-
-if (typeof mydagrepo == "undefined") {
-  var mydagrepo = {};
-};
-
-// returns a list of all predecessors of a parent node / more or less tail recursive function
-mydagrepo.findAllPredecessors = function(node, predecessorsList) {
-  predecessorsList = predecessorsList || [];
-  if (dag.predecessors(node)){
-    dag.predecessors(node).forEach(function (n) {
-      //some nodes can be visited more than once so this removes them
-      if (predecessorsList.indexOf(n) == -1) {
-        predecessorsList.push(n);
-      }
-      mydagrepo.findAllPredecessors(n, predecessorsList);
-    });
-  }
-  else{
-    console.log('no predecessors for node' + node);
-  }
-  return predecessorsList;
-};
-
-mydagrepo.getNodeByVersionID = function(that, props, versionId){
-  var nodes = props.repo.DAG.Nodes;
-  var keys = Object.keys(nodes);
-  for (var k = 0; k < keys.length; k++){
-    if(nodes[keys[k]].VersionID == versionId){
-      return nodes[keys[k]].UUID;
-    }
-  }
-};
-
-mydagrepo.nodeList = null;
-
-mydagrepo.resetGraph = function(dag){
-  // test if the number of nodes in current dag is different from initial number
-  var backupKeys = Object.keys(mydagrepo.nodeList);
-  var dagKeys = Object.keys(dag.Nodes);
-  // if (dagKeys.length < backupKeys.length){
-  for (var k = 0; k < dagKeys.length; k++){
-    // dag.removeNode(k);
-  }
-  for (var k = 0; k < backupKeys.length; k++){
-    dag.setNode(mydagrepo[backupKeys[k]]);
-  }
-};
-
-mydagrepo.initialDag = null;
 
 // Dagre graph
 var RepoDAGDisplay = React.createClass({
@@ -127,80 +76,7 @@ var RepoDAGDisplay = React.createClass({
     }
   },
 
-  // myCallback: function (selectedNode) {
-  //   this.clear();
-  //
-  //   // create new graph
-  //   var partialDag = new dagreD3.graphlib.Graph({
-  //     compound: true,
-  //     multigraph: true
-  //   })
-  //   .setGraph({})
-  //   .setDefaultEdgeLabel(function () {
-  //     return {};
-  //   });
-  //
-  //   // add partial nodes to new graph -- first the root node
-  //   var version = selectedNode.VersionID;
-  //   var name = selectedNode.UUID;
-  //   var nodeclass = "";
-  //   var log = "";
-  //   var note = 'test note';
-  //
-  //   var rootNode = {
-  //     label: version + ': ' + name.substr(0, 5),
-  //     css: nodeclass,
-  //     rx: 5,
-  //     ry: 5,
-  //     log: log,
-  //     note: note,
-  //     fullname: version + ': ' + name,
-  //     uuid: name,
-  //     id: "node" + version,
-  //     expandedChildren: null,
-  //     collapsedChildren: null,
-  //     isMerge: false,
-  //     isCollapsible: false
-  //   };
-  //   partialDAG.setNode(version, rootNode);
-  //
-  //   // Get all the predecessors of a node
-  //   var preds = mydagrepo.findAllPredecessors(version);
-  //
-  //   for (var p = 0; p < preds.length; p++){
-  //     var version = preds[p];
-  //     var oldNode = this.getNodeById(preds[p],this.props.repo.DAG);
-  //     var name = oldNode.UUID;
-  //     var nodeclass = "";
-  //     var log = "";
-  //     var note = 'test note';
-  //
-  //     var newNode = {
-  //       label: version + ': ' + name.substr(0, 5),
-  //       css: nodeclass,
-  //       rx: 5,
-  //       ry: 5,
-  //       log: log,
-  //       note: note,
-  //       fullname: version + ': ' + name,
-  //       uuid: name,
-  //       id: "node" + version,
-  //       expandedChildren: null,
-  //       collapsedChildren: null,
-  //       isMerge: false,
-  //       isCollapsible: false
-  //     };
-  //     partialDAG.setNode(version, newNode);
-  //   }
-  //
-  //   // finally, draw the graph
-  //   this.drawTrunk(partialDAG);
-  //   this.drawSubtree(partialDAG,rootNode.label.substr(0,1));
-  //   this.update(partialDAG);
-  //   this.fitDAG(partialDAG);
-  // },
-
-    myCallbackBranches: function (selectedBranch) {
+  myCallbackBranches: function (selectedBranch) {
     this.clear();
 
     if (selectedBranch == 'Show all'){
@@ -225,7 +101,7 @@ var RepoDAGDisplay = React.createClass({
 
       this.traverseTree(root, selectedBranch, branchList);
       this.drawTheBranch(branchList, partialDAG);
-
+      console.log('update');
       this.update(partialDAG);
       this.fitDAG(partialDAG);
     }
@@ -269,11 +145,9 @@ var RepoDAGDisplay = React.createClass({
   drawTheBranch: function(branchList, partialDAG){
     for (var j = 0; j < branchList.length; j++){
       var node = this.getNodeByVersion(branchList[j].VersionID);
-      var first = true;
       if (node){
-        if (!first){
-          first = false;
-          // partialDAG.setEdge(otherBranches[0].parent, otherBranches[0].child);
+        partialDAG.setNode(node.VersionID, node);
+        if (j > 0){
           partialDAG.setEdge(node.Parents[0], node.VersionID,
               {
                 lineInterpolate: 'basis',
@@ -281,7 +155,6 @@ var RepoDAGDisplay = React.createClass({
                 id: node.Parents[0] + "-" + node.VersionID
               });
         }
-        partialDAG.setNode(node.VersionID, node);
       }
     }
   },
