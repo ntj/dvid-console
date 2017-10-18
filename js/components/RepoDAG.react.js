@@ -101,7 +101,6 @@ var RepoDAGDisplay = React.createClass({
 
       this.traverseTree(root, selectedBranch, branchList);
       this.drawTheBranch(branchList, partialDAG);
-      console.log('update');
       this.update(partialDAG);
       this.fitDAG(partialDAG);
     }
@@ -146,7 +145,27 @@ var RepoDAGDisplay = React.createClass({
     for (var j = 0; j < branchList.length; j++){
       var node = this.getNodeByVersion(branchList[j].VersionID);
       if (node){
-        partialDAG.setNode(node.VersionID, node);
+        // partialDAG.setNode(node.VersionID, node);
+        var name = node.UUID.substr(0,5);
+        var nodeclass = node.Locked ? 'type-locked' : 'type-unlocked';
+        var log = 'log';
+        var note = node.Note;
+        partialDAG.setNode(node.VersionID, {
+          label: node.VersionID + ': ' + name.substr(0, 5),
+          css: nodeclass,
+          rx: 5,
+          ry: 5,
+          log: log,
+          note: note,
+          fullname: node.VersionID + ': ' + name,
+          uuid: name,
+          id: "node" + node.VersionID,
+          expandedChildren: null,
+          collapsedChildren: null,
+          isMerge: false,
+          isCollapsible: false
+        });
+
         if (j > 0){
           partialDAG.setEdge(node.Parents[0], node.VersionID,
               {
