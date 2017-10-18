@@ -141,10 +141,12 @@ var RepoDAGDisplay = React.createClass({
       }
   },
 
-  setNodePartialTree: function(partialDAG, node){
+  setNodePartialTree: function(partialDAG, node, ischild){
     // partialDAG.setNode(node.VersionID, node);
     var name = node.UUID.substr(0,5);
+
     var nodeclass = node.Locked ? 'type-locked' : 'type-unlocked';
+    nodeClass += isChild ? 'node-child' : '';
     var log = 'log';
     var note = node.Note;
 
@@ -167,7 +169,7 @@ var RepoDAGDisplay = React.createClass({
 
   drawTheBranch: function(branchList, partialDAG, selectedBranch){
     for (var j = 0; j < branchList.length; j++){
-      var node = this.getNodeByVersion(branchList[j].VersionID);
+      var node = this.getNodeByVersion(branchList[j].VersionID, false);
       if (node){
         this.setNodePartialTree(partialDAG, node);
         if (j > 0){
@@ -182,7 +184,7 @@ var RepoDAGDisplay = React.createClass({
         // check, if there are children, which belong to other branches
         var children = node.Children;
         for (var c=0; c<children.length; c++){
-          var child = this.getNodeByVersion(children[c]);
+          var child = this.getNodeByVersion(children[c],true);
           if (child.Branch !== selectedBranch){
             this.setNodePartialTree(partialDAG, child);
             partialDAG.setEdge(node.VersionID, children[c],
@@ -196,6 +198,8 @@ var RepoDAGDisplay = React.createClass({
       }
     }
   },
+
+
 
   initDag: function (t, props) {
     //initialize svg for D3
