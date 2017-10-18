@@ -185,7 +185,7 @@ var RepoDAGDisplay = React.createClass({
           var child = this.getNodeByVersion(children[c]);
           if (child.Branch !== selectedBranch){
             this.setNodePartialTree(partialDAG, child);
-            partialDAG.setEdge(node.Parents[0], children[c],
+            partialDAG.setEdge(node.VersionID, children[c],
                 {
                   lineInterpolate: 'basis',
                   arrowheadStyle: "fill: #111",
