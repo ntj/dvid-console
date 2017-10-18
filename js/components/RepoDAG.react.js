@@ -127,19 +127,6 @@ var RepoDAGDisplay = React.createClass({
     }
   },
 
-  initialDag: null,
-
-  getNodeById: function(nodeVersionID, dag){
-    var keys = Object.keys(dag.Nodes);
-    for (var k = 0; k < keys.length; k++){
-      var node = dag.Nodes[keys[k]];
-      if (node.VersionID == nodeVersionID){
-        return node;
-      }
-    }
-    return node;
-  },
-
   // myCallback: function (selectedNode) {
   //   this.clear();
   //
@@ -213,7 +200,7 @@ var RepoDAGDisplay = React.createClass({
   //   this.fitDAG(partialDAG);
   // },
 
-  myCallbackBranches: function (selectedBranch) {
+    myCallbackBranches: function (selectedBranch) {
     this.clear();
 
     if (selectedBranch == 'Show all'){
@@ -232,80 +219,16 @@ var RepoDAGDisplay = React.createClass({
                 return {};
               }
           );
-      var tNodes = this.props.repo.DAG.Nodes;
-      var branchNodes = [];
-      var branchKeys = [];
-      var branchVersionIds = [];
-      var branchChildren = [];
-      var otherBranches = [];
 
-      // collect the branch nodes
-      var keys = Object.keys(tNodes);
-      for (var k=0; k < keys.length; k++){
-          if ((tNodes[keys[k]]).Branch == selectedBranch){
-              branchNodes.push(tNodes[keys[k]]);
-              branchKeys.push(keys[k]);
-          }
-      }
+      var branchList = [];
+      var root = this.findRoot();
 
-      // add branch nodes and edges to the partial DAG
-      if (branchNodes.length > 0){
-        for (var b = 0; b < branchNodes.length; b++){
-          var tmpNode = branchNodes[b];
-          branchVersionIds.push(tmpNode.VersionID);
-          // // check, if parent node is root node, if so, add root
-          // if ((this.getNodeByVersion(tmpNode.Parents[0])).Branch !== selectedBranch){
-          //   // we found root of the branch -> add it to the tree
-          //   partialDAG.setNode(tmpNode.Parents[0], dag._nodes[tmpNode.Parents[0]]);
-          // }
-          partialDAG.setNode(tmpNode.VersionID, dag._nodes[tmpNode.VersionID]);
-
-          var tChildren = tmpNode.Children;
-          for (var i=0; i < tChildren.length; i++){
-            var parentChild = {};
-            parentChild.parent = tmpNode.VersionID;
-            parentChild.child = tChildren[i];
-            branchChildren.push(parentChild);
-          }
-
-          // Make sure, we are not drawing the edge to the root node (which is of different branch)
-          if (this.getNodeByVersion(tmpNode.Parents[0]).Branch === selectedBranch){
-            partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID,
-                {
-                  lineInterpolate: 'basis',
-                  arrowheadStyle: "fill: #111",
-                  id: tmpNode.Parents[0] + "-" + tmpNode.VersionID
-                }
-            );
-          }
-          else {
-            // root node belongs to another branch -> show which branch
-
-          }
-        }
-      }
-
-      // draw the edged to branches which are not displayed
-      for (var c = 0; c < branchChildren.length; c++){
-        if (branchVersionIds.indexOf(branchChildren[c]) == -1){
-            //found a child, which is not part of the branch
-            otherBranches.push(branchChildren[c].child);
-        }
-      }
-
-      // draw some lines to indicate, that there are other branches in the tree
-      if (otherBranches.length > 0){
-        var tmp = otherBranches[0];
-
-        // draw a line to other branches at other branches
-        // draw a line to other branches at other branches
-        var myElem = d3.select('#node' + tmp.parent);
-        myElem..append("line").attr("x1", 5).attr("y1", 5).attr("x2", 50).attr("y2", 50);
-      }
+      this.traverseTree(root, selectedBranch, branchList);
+      this.drawTheBranch(branchList, partialDAG);
 
       this.update(partialDAG);
       this.fitDAG(partialDAG);
-      }
+    }
   },
 
   // get the actual node with all information from the original DAG
@@ -321,69 +244,46 @@ var RepoDAGDisplay = React.createClass({
     return null;
   },
 
-  // traverse through DAG and collect child nodes
-  collectChildren: function(node, partialDAG, dag){
-    var children = node.Children;
-    for (var c = 0; c < children.length; c++){
-      var tmpNode = this.getNodeByVersion(children[c]);
-      partialDAG.setEdge(node.VersionID,children[c]);
-      partialDAG.setNode(children[c],dag._nodes[tmpNode.VersionID]);
-      this.collectChildren(tmpNode, partialDAG, dag);
+  findRoot: function(){
+    var nodes = this.props.repo.DAG.Nodes;
+    var keys = Object.keys(nodes);
+    for (var i = 0; i < keys.length; i++){
+        if (nodes[keys[i]].Branch === ""){
+            return nodes[keys[i]];
+        }
     }
+    return null;
   },
 
-
-  // collect all nodes, which belong to a branch
-  drawBranch: function(node, partialDAG, dag, selectedBranch){
-     var nodes = this.props.repo.DAG.Nodes;
-     var keys = Object.keys(nodes);
-     for (var i=0; i < keys.length; i++){
-       if (nodes[keys[i]].Branch === selectedBranch){
-         var tmpNode = nodes[keys[i]];
-         partialDAG.setNode(tmpNode.VersionID, dag._nodes[tmpNode.VersionID]);
-         partialDAG.setEdge(tmpNode.Parents[0], tmpNode.VersionID,
-             {
-               lineInterpolate: 'basis',
-               arrowheadStyle: "fill: #111",
-               id: tmpNode.Parents[0] + "-" + tmpNode.VersionID
-             }
-         );
-       }
-     }
-  },
-
-  drawTrunk: function(partialDAG){
-    var nodes = partialDAG.nodes();
-
-    // need to go in reverse order so that parent nodes won't be collapsed until all of their children are collapsed
-    nodes.forEach(function (n) {
-      if (partialDAG.node(n) && partialDAG.node(n).expandedChildren) {
-        collapseChildren(n)
+  traverseTree: function(node, selectedBranch, branchList){
+      if(node.Branch === selectedBranch){
+          branchList.push(node);
       }
-    });
-
-    // draw the edges
-    var first=null;
-    for (var i = 1; i < nodes.length; i++){
-      first = nodes[i-1];
-      partialDAG.setEdge(first,nodes[i]);
-    }
+      var children = node.Children;
+      for (var c = 0; c < children.length; c++){
+        var childNode = this.getNodeByVersion(children[c]);
+        this.traverseTree(childNode, selectedBranch, branchList);
+      }
   },
 
-
-  setEdgeSubtree: function(partialDAG, edges,rootId){
-    for (var i = 0; i < edges.length; i++){
-      if (edges[i].v == rootId){
-        partialDAG.setNode(edges[i].w, this.initialDag._nodes[edges[i].w]);
-        partialDAG.setEdge(edges[i].v, edges[i].w);
-        this.setEdgeSubtree(partialDAG, edges,edges[i].w);
+  drawTheBranch: function(branchList, partialDAG){
+    for (var j = 0; j < branchList.length; j++){
+      var node = this.getNodeByVersion(branchList[j].VersionID);
+      var first = true;
+      if (node){
+        if (!first){
+          first = false;
+          // partialDAG.setEdge(otherBranches[0].parent, otherBranches[0].child);
+          partialDAG.setEdge(node.Parents[0], node.VersionID,
+              {
+                lineInterpolate: 'basis',
+                arrowheadStyle: "fill: #111",
+                id: node.Parents[0] + "-" + node.VersionID
+              });
+        }
+        partialDAG.setNode(node.VersionID, node);
       }
     }
-  },
-
-  drawSubtree: function(partialDAG,rootId){
-    var edges = this.initialDag.edges();
-    this.setEdgeSubtree(partialDAG,edges,rootId);
   },
 
   initDag: function (t, props) {
@@ -615,7 +515,11 @@ var RepoDAGDisplay = React.createClass({
         .append("xhtml:span")
         .attr("class", `unlocked fa fa-unlock ${forbidden_toggle}`);
 
-    // add navigation listener
+    // // add class for hint nodes
+    // elementHolderLayer.selectAll("g.node.type-hint")
+    //               .attr("class", `node-hint`);
+
+    // add navigation listener - antje's code
     elementHolderLayer.selectAll("g.node rect")
         .on("mouseenter", function (v) {
           if (currentDag.node(v).note) {
@@ -643,7 +547,7 @@ var RepoDAGDisplay = React.createClass({
           }
         });
 
-    // add commit and branch actions, if allowed
+    // add commit and branch actions
     if (this.isEditable()) {
       elementHolderLayer.selectAll("g.node foreignObject span")
       //want to add tooltips?
@@ -1071,5 +975,4 @@ function expand(parent, collapsedChildren) {
     expand(child, collapsedChildren[child].expandedChildren);
   }
 }
-
 
