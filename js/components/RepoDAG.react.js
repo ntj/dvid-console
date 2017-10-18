@@ -100,7 +100,7 @@ var RepoDAGDisplay = React.createClass({
       var root = this.findRoot();
 
       this.traverseTree(root, selectedBranch, branchList);
-      this.drawTheBranch(branchList, partialDAG);
+      this.drawTheBranch(branchList, partialDAG, selectedBranch);
       this.update(partialDAG);
       this.fitDAG(partialDAG);
     }
@@ -141,38 +141,57 @@ var RepoDAGDisplay = React.createClass({
       }
   },
 
-  drawTheBranch: function(branchList, partialDAG){
+  setNodePartialTree: function(partialDAG, node){
+    // partialDAG.setNode(node.VersionID, node);
+    var name = node.UUID.substr(0,5);
+    var nodeclass = node.Locked ? 'type-locked' : 'type-unlocked';
+    var log = 'log';
+    var note = node.Note;
+
+    partialDAG.setNode(node.VersionID, {
+      label: node.VersionID + ': ' + name.substr(0, 5),
+      css: nodeclass,
+      rx: 5,
+      ry: 5,
+      log: log,
+      note: note,
+      fullname: node.VersionID + ': ' + name,
+      uuid: name,
+      id: "node" + node.VersionID,
+      expandedChildren: null,
+      collapsedChildren: null,
+      isMerge: false,
+      isCollapsible: false
+    });
+  },
+
+  drawTheBranch: function(branchList, partialDAG, selectedBranch){
     for (var j = 0; j < branchList.length; j++){
       var node = this.getNodeByVersion(branchList[j].VersionID);
       if (node){
-        // partialDAG.setNode(node.VersionID, node);
-        var name = node.UUID.substr(0,5);
-        var nodeclass = node.Locked ? 'type-locked' : 'type-unlocked';
-        var log = 'log';
-        var note = node.Note;
-        partialDAG.setNode(node.VersionID, {
-          label: node.VersionID + ': ' + name.substr(0, 5),
-          css: nodeclass,
-          rx: 5,
-          ry: 5,
-          log: log,
-          note: note,
-          fullname: node.VersionID + ': ' + name,
-          uuid: name,
-          id: "node" + node.VersionID,
-          expandedChildren: null,
-          collapsedChildren: null,
-          isMerge: false,
-          isCollapsible: false
-        });
-
+        this.setNodePartialTree(partialDAG, node);
         if (j > 0){
           partialDAG.setEdge(node.Parents[0], node.VersionID,
-              {
-                lineInterpolate: 'basis',
-                arrowheadStyle: "fill: #111",
-                id: node.Parents[0] + "-" + node.VersionID
-              });
+            {
+              lineInterpolate: 'basis',
+              arrowheadStyle: "fill: #111",
+              id: node.Parents[0] + "-" + node.VersionID
+            });
+        }
+
+        // check, if there are children, which belong to other branches
+        var children = node.Children;
+        for (var c=0; c<children.length; c++){
+          var child = this.getNodeByVersion(children[c]);
+          if (child.Branch !== selectedBranch){
+            this.setNodePartialTree(partialDAG, child);
+            partialDAG.setEdge(node.Parents[0], children[c],
+                {
+                  lineInterpolate: 'basis',
+                  arrowheadStyle: "fill: #111",
+                  id: node.Parents[0] + "-" + node.VersionID
+                });
+          }
         }
       }
     }
