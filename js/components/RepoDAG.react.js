@@ -72,7 +72,7 @@ var RepoDAGDisplay = React.createClass({
 
   drawGraph: function (props) {
     if (props.repo.DAG.Nodes.hasOwnProperty(props.uuid)) {
-      this.initDag(this, props);
+      this.initDag(this, props, null);
     }
   },
 
@@ -96,12 +96,12 @@ var RepoDAGDisplay = React.createClass({
               }
           );
 
-      var branchList = [];
+      var branchObject = {};
       var root = this.findRoot();
 
-      this.traverseTree(root, selectedBranch, branchList);
-      this.drawTheBranch(branchList, partialDAG, selectedBranch);
-      this.update(partialDAG);
+      this.traverseTree(root, selectedBranch, branchObject);
+      // this.update(partialDAG);
+      this.initDag(this, this.props, branchObject);
       this.fitDAG(partialDAG);
     }
   },
@@ -130,29 +130,31 @@ var RepoDAGDisplay = React.createClass({
     return null;
   },
 
-  traverseTree: function(node, selectedBranch, branchList){
-      if(node.Branch === selectedBranch){
-          branchList.push(node);
+  traverseTree: function(node, selectedBranch, branchObject){
+      if(node.Branch === selectedBranch) {
+        branchObject[node.UUID] = node;
       }
+
+      // collect the children
       var children = node.Children;
       for (var c = 0; c < children.length; c++){
         var childNode = this.getNodeByVersion(children[c]);
-        this.traverseTree(childNode, selectedBranch, branchList);
+        this.traverseTree(childNode, selectedBranch, branchObject);
       }
   },
 
-  setNodePartialTree: function(partialDAG, node, ischild){
+  setNodePartialTree: function(partialDAG, node, isChild){
     // partialDAG.setNode(node.VersionID, node);
     var name = node.UUID.substr(0,5);
 
-    var nodeclass = node.Locked ? 'type-locked' : 'type-unlocked';
+    var nodeClass = node.Locked ? 'type-locked' : 'type-unlocked';
     nodeClass += isChild ? 'node-child' : '';
     var log = 'log';
     var note = node.Note;
 
     partialDAG.setNode(node.VersionID, {
       label: node.VersionID + ': ' + name.substr(0, 5),
-      css: nodeclass,
+      css: nodeClass,
       rx: 5,
       ry: 5,
       log: log,
@@ -199,25 +201,26 @@ var RepoDAGDisplay = React.createClass({
     }
   },
 
-
-
-  initDag: function (t, props) {
-    //initialize svg for D3
+  initDag: function(t, props, nodes){
+    // initialize svg for D3
     var svg = d3.select("svg");
     // .attr("width", width)
     // .attr("height", height);
     // clear out the existing data.
     svg.selectAll("*").remove();
-    //adds background to differentiate from graph elements
+
+    // adds background to differentiate from graph elements
     svgBackground = svg.append("rect")
         .attr("id", "svgBackground")
         .attr("fill", "transparent")
         .attr("width", $("svg").width())
         .attr("height", $("svg").height());
-    //creates a group that will hold all the svg elements for the graph
+
+    // creates a group that will hold all the svg elements for the graph
     elementHolderLayer = svg.append("g")
         .attr("id", "elementHolderLayer");
-    //defines a shadow for the entire svg for use when hovering over nodes
+
+    // defines a shadow for the entire svg for use when hovering over nodes
     var shadow = svg.append("defs")
         .append("filter")
         .attr("id", "drop-shadow")
@@ -239,40 +242,43 @@ var RepoDAGDisplay = React.createClass({
         .attr('in2', "blurOut")
         .attr('mode', "normal");
 
-    // creates new dagreD3 object
+    // create new dagreD3 object
     dag = new dagreD3.graphlib.Graph({
       compound: true,
       multigraph: true
     })
-      .setGraph({})
-      .setDefaultEdgeLabel(function () {
-        return {};
-      });
+        .setGraph({})
+        .setDefaultEdgeLabel(function () {
+          return {};
+        });
 
-    // adds nodes and edges from the JSON dag data
-    $.each(props.repo.DAG.Nodes, function (name, n) {
+    // check, if we initialize the full tree or just a sub branch
+    var nodes = nodes;
+    if (!nodes) {
+      nodes = props.repo.DAG.Nodes;
+    }
+
+    // add nodes and edges from the JSON dag data
+    $.each(nodes, function (name, n) {
       var version = n.VersionID;
       var log = '';
       if (n.Log.length) log = (n.Log);
       var nodeclass = "";
-      if (n.Locked) {
+      if (n.Locked){
         nodeclass = "type-locked";
-      } else {
+      }else{
         nodeclass = "type-unlocked";
       }
-
-      // Note defines the tooltip
       var note = null;
-      if (n.Note){
-        note = n.Note;
-      }
+      if (n.Note) note = n.Note;
 
-      if (props.repoMasterUuuid && RegExp('^' + props.repoMasterUuuid).test(n.UUID)) {
+      if(props.repoMasterUuuid && RegExp('^' + props.repoMasterUuuid).test(n.UUID)){
         nodeclass = nodeclass + " " + "master";
+
       }
-      else if (props.repoMasterBranchHist) {
-        props.repoMasterBranchHist.slice(1).forEach(function (masterBranchUuid) {
-          if (RegExp('^' + masterBranchUuid).test(n.UUID)) {
+      else if(props.repoMasterBranchHist){
+        props.repoMasterBranchHist.slice(1).forEach(function(masterBranchUuid){
+          if(RegExp('^' + masterBranchUuid).test(n.UUID)){
             nodeclass += " master_branch";
           }
         }.bind(this))
@@ -284,7 +290,7 @@ var RepoDAGDisplay = React.createClass({
 
       dag.setNode(version, {
         label: version + ': ' + name.substr(0, 5),
-        css: nodeclass,
+        class: nodeclass,
         rx: 5,
         ry: 5,
         log: log,
@@ -295,42 +301,54 @@ var RepoDAGDisplay = React.createClass({
         expandedChildren: null,
         collapsedChildren: null,
         isMerge: false,
-        isCollapsible: false
+        isCollapsible: true
       });
-
-      // draw the edges
       $.each(n.Children, function (c) {
-          dag.setEdge(version, n.Children[c], {
-            lineInterpolate: 'basis',
-            arrowheadStyle: "fill: #111",
-            id: version + "-" + n.Children[c]
-          });
+        dag.setEdge(version, n.Children[c], {
+          lineInterpolate: 'basis',
+          arrowheadStyle: "fill: #111",
+          id: version + "-" + n.Children[c]
+        });
       });
     });
 
+    // return a list of all predecessors of a parent node
+    function findAllPredecessors(node, predecessorsList) {
+      predecessorsList = predecessorsList || [];
+      dag.predecessors(node).forEach(function (n) {
+        //some nodes can be visited more than once so this removes them
+        if (predecessorsList.indexOf(n) == -1) {
+          predecessorsList.push(n);
+        }
+        findAllPredecessors(n, predecessorsList);
+      });
+      return predecessorsList;
+    }
+
     // sets merges and all their predecessors to be uncollapsible
-    // gives merges a "merge" class
+    // give merges a "merge" class
     dag.nodes().forEach(function (n) {
       if (dag.predecessors(n).length > 1) {
         dag.node(n).isMerge = true;
         dag.node(n).class = dag.node(n).class + " " + "merge";
         dag.node(n).isCollapsible = false;
-        mydagrepo.findAllPredecessors(n).forEach(function (p) {
+        findAllPredecessors(n).forEach(function (p) {
           dag.node(p).isCollapsible = false;
         });
       }
     });
 
-    // gives parents a variable to access their collapsible children  --- start, no render yet
+    // give parents a variable to access their collapsible children
     dag.nodes().forEach(function (n) {
-      //collapsibleChildren will be a dictionary with key being the node name (that you can call dag.node() with) and the value being properties of that node
+      // collapsibleChildren will be a dictionary with key being the node name (that you can call dag.node() with) and the value being properties of that node
       var collapsibleChildren = {};
       dag.successors(n).forEach(function (c) {
-        if (dag.node(c).isCollapsible) {
-          //adds the node properties to collapsibleChildren so that it can be used to add the node back later
+        if (dag.node(c) && dag.node(c).isCollapsible) {
+          // add the node properties to collapsibleChildren so that it can be used to add the node back later
           collapsibleChildren[c] = dag.node(c);
         }
       });
+
       // only give it expandedChildren if it has collapsible children. otherwise it is kept null (and not set to {})
       if (Object.getOwnPropertyNames(collapsibleChildren).length !== 0) {
         dag.node(n).expandedChildren = collapsibleChildren;
@@ -340,15 +358,13 @@ var RepoDAGDisplay = React.createClass({
 
     // kludge for fixing edge crossings created by the initial dagre render:
     // collapse, then expand
-    this.collapseGraph();  // collapse graph is rendering the graph
+    this.collapseGraph();
     this.scrollToCurrent();
 
-    //set transition for future collapsing and expanding -- stop, here render took place
+    // set transition for future collapsing and expanding
     dag.graph().transition = function (selection) {
       return selection.transition().duration(300);
     };
-
-    this.fitDAG();
   },
 
   clear: function(){
