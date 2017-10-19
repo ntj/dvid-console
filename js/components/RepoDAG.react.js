@@ -72,16 +72,16 @@ var RepoDAGDisplay = React.createClass({
 
   drawGraph: function (props) {
     if (props.repo.DAG.Nodes.hasOwnProperty(props.uuid)) {
-      this.initDag(this, props, null);
+      this.initDag(this, props, null, null);
     }
   },
 
   myCallbackBranches: function (selectedBranch) {
     this.clear();
-
     if (selectedBranch == 'Show all'){
-      this.update(dag);
-      this.fitDAG(dag);
+      if (this.props.repo.DAG.Nodes.hasOwnProperty(this.props.uuid)) {
+        this.initDag(this, this.props, null, null);
+      }
       return;
     }
     else {
@@ -101,7 +101,7 @@ var RepoDAGDisplay = React.createClass({
 
       this.traverseTree(root, selectedBranch, branchObject);
       // this.update(partialDAG);
-      this.initDag(this, this.props, branchObject);
+      this.initDag(this, this.props, selectedBranch, branchObject);
       this.fitDAG(partialDAG);
     }
   },
@@ -119,6 +119,7 @@ var RepoDAGDisplay = React.createClass({
     return null;
   },
 
+  // find the root node, branch is ""
   findRoot: function(){
     var nodes = this.props.repo.DAG.Nodes;
     var keys = Object.keys(nodes);
@@ -130,78 +131,25 @@ var RepoDAGDisplay = React.createClass({
     return null;
   },
 
+  // find nodes belonging to the partial graph
   traverseTree: function(node, selectedBranch, branchObject){
-      if(node.Branch === selectedBranch) {
+      // if we have a node, which belongs to our branch, add this node to the list
+      if (node.Branch === selectedBranch){
         branchObject[node.UUID] = node;
       }
-
-      // collect the children
+      // traverse through children of node to find more nodes to the branch
       var children = node.Children;
       for (var c = 0; c < children.length; c++){
         var childNode = this.getNodeByVersion(children[c]);
+
+        if (node.Branch == selectedBranch && childNode.Branch !== selectedBranch){
+          branchObject[childNode.UUID] = childNode;
+        }
         this.traverseTree(childNode, selectedBranch, branchObject);
       }
   },
 
-  setNodePartialTree: function(partialDAG, node, isChild){
-    // partialDAG.setNode(node.VersionID, node);
-    var name = node.UUID.substr(0,5);
-
-    var nodeClass = node.Locked ? 'type-locked' : 'type-unlocked';
-    nodeClass += isChild ? 'node-child' : '';
-    var log = 'log';
-    var note = node.Note;
-
-    partialDAG.setNode(node.VersionID, {
-      label: node.VersionID + ': ' + name.substr(0, 5),
-      css: nodeClass,
-      rx: 5,
-      ry: 5,
-      log: log,
-      note: note,
-      fullname: node.VersionID + ': ' + name,
-      uuid: name,
-      id: "node" + node.VersionID,
-      expandedChildren: null,
-      collapsedChildren: null,
-      isMerge: false,
-      isCollapsible: false
-    });
-  },
-
-  drawTheBranch: function(branchList, partialDAG, selectedBranch){
-    for (var j = 0; j < branchList.length; j++){
-      var node = this.getNodeByVersion(branchList[j].VersionID, false);
-      if (node){
-        this.setNodePartialTree(partialDAG, node);
-        if (j > 0){
-          partialDAG.setEdge(node.Parents[0], node.VersionID,
-            {
-              lineInterpolate: 'basis',
-              arrowheadStyle: "fill: #111",
-              id: node.Parents[0] + "-" + node.VersionID
-            });
-        }
-
-        // check, if there are children, which belong to other branches
-        var children = node.Children;
-        for (var c=0; c<children.length; c++){
-          var child = this.getNodeByVersion(children[c],true);
-          if (child.Branch !== selectedBranch){
-            this.setNodePartialTree(partialDAG, child);
-            partialDAG.setEdge(node.VersionID, children[c],
-                {
-                  lineInterpolate: 'basis',
-                  arrowheadStyle: "fill: #111",
-                  id: node.Parents[0] + "-" + node.VersionID
-                });
-          }
-        }
-      }
-    }
-  },
-
-  initDag: function(t, props, nodes){
+  initDag: function(t, props, selectedBranch, nodes){
     // initialize svg for D3
     var svg = d3.select("svg");
     // .attr("width", width)
@@ -253,7 +201,6 @@ var RepoDAGDisplay = React.createClass({
         });
 
     // check, if we initialize the full tree or just a sub branch
-    var nodes = nodes;
     if (!nodes) {
       nodes = props.repo.DAG.Nodes;
     }
@@ -303,12 +250,17 @@ var RepoDAGDisplay = React.createClass({
         isMerge: false,
         isCollapsible: true
       });
+    });
+
+    $.each(nodes, function (name, n) {
       $.each(n.Children, function (c) {
-        dag.setEdge(version, n.Children[c], {
-          lineInterpolate: 'basis',
-          arrowheadStyle: "fill: #111",
-          id: version + "-" + n.Children[c]
-        });
+        if ((selectedBranch === null) || n.Branch === selectedBranch){
+          dag.setEdge(n.VersionID, n.Children[c], {
+            lineInterpolate: 'basis',
+            arrowheadStyle: "fill: #111",
+            id: n.VersionID + "-" + n.Children[c]
+          });
+        }
       });
     });
 
