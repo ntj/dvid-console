@@ -17,6 +17,10 @@ import BranchDropdown from '../lite-components/BranchDropdown.react.js';
 
 var dag, elementHolderLayer, svgBackground;
 
+var dagControl = dagControl || {};
+
+dagControl.oddChildren = []
+
 // Dagre graph
 var RepoDAGDisplay = React.createClass({
   mixins: [Router.Navigation],
@@ -78,6 +82,7 @@ var RepoDAGDisplay = React.createClass({
 
   myCallbackBranches: function (selectedBranch) {
     this.clear();
+    dagControl.oddChildren = [];
     if (selectedBranch == 'Show all'){
       if (this.props.repo.DAG.Nodes.hasOwnProperty(this.props.uuid)) {
         this.initDag(this, this.props, null, null);
@@ -100,7 +105,6 @@ var RepoDAGDisplay = React.createClass({
       var root = this.findRoot();
 
       this.traverseTree(root, selectedBranch, branchObject);
-      // this.update(partialDAG);
       this.initDag(this, this.props, selectedBranch, branchObject);
       this.fitDAG(partialDAG);
     }
@@ -142,8 +146,10 @@ var RepoDAGDisplay = React.createClass({
       for (var c = 0; c < children.length; c++){
         var childNode = this.getNodeByVersion(children[c]);
 
+        // find those children, where the node is in the current branch, but the child is not
         if (node.Branch == selectedBranch && childNode.Branch !== selectedBranch){
           branchObject[childNode.UUID] = childNode;
+          dagControl.oddChildren.push(node.VersionID + '-' + childNode.VersionID);
         }
         this.traverseTree(childNode, selectedBranch, branchObject);
       }
@@ -211,17 +217,23 @@ var RepoDAGDisplay = React.createClass({
       var log = '';
       if (n.Log.length) log = (n.Log);
       var nodeclass = "";
-      if (n.Locked){
-        nodeclass = "type-locked";
-      }else{
-        nodeclass = "type-unlocked";
+
+      if (selectedBranch && (selectedBranch !== n.Branch)){
+        nodeclass += ' node-hint';
+      }
+      else {
+        if (n.Locked){
+          nodeclass += "type-locked";
+        }
+        else{
+          nodeclass += "type-unlocked";
+        }
       }
       var note = null;
       if (n.Note) note = n.Note;
 
       if(props.repoMasterUuuid && RegExp('^' + props.repoMasterUuuid).test(n.UUID)){
         nodeclass = nodeclass + " " + "master";
-
       }
       else if(props.repoMasterBranchHist){
         props.repoMasterBranchHist.slice(1).forEach(function(masterBranchUuid){
@@ -255,11 +267,30 @@ var RepoDAGDisplay = React.createClass({
     $.each(nodes, function (name, n) {
       $.each(n.Children, function (c) {
         if ((selectedBranch === null) || n.Branch === selectedBranch){
-          dag.setEdge(n.VersionID, n.Children[c], {
-            lineInterpolate: 'basis',
-            arrowheadStyle: "fill: #111",
-            id: n.VersionID + "-" + n.Children[c]
-          });
+          if (dagControl.oddChildren && dagControl.oddChildren.indexOf(n.VersionID + '-' + n.Children[c]) !== -1){
+            dag.setEdge(
+              n.VersionID,
+              n.Children[c],
+              // {
+              //   class: 'edge-hint',
+              //   arrowheadStyle: "fill: #AAA",
+              //   style: 'stroke: blue',
+              //   id: n.VersionID + "-" + n.Children[c]
+              // }
+            );
+
+          }
+          else {
+            dag.setEdge(
+              n.VersionID,
+              n.Children[c]
+              // {
+              //   ineInterpolate: 'basis',
+              //   arrowheadStyle: "fill: #111",
+              //   id: n.VersionID + "-" + n.Children[c]
+              // }
+            );
+          }
         }
       });
     });
@@ -848,14 +879,26 @@ function collapse(expandedChildren) {
 function expand(parent, collapsedChildren) {
   for (var child in collapsedChildren) {
     dag.setNode(child, collapsedChildren[child]);
-    dag.setEdge(parent, child, {
-      lineInterpolate: 'basis',
-      id: parent + "-" + child,
-      arrowheadStyle: "fill: #111",
-    });
+    // test, if parent/child combination is in the list of oddChildren
+    if (dagControl.oddChildren && dagControl.oddChildren.indexOf(parent + '-' + child) === -1){
+        dag.setEdge(parent, child, {
+        lineInterpolate: 'basis',
+        id: parent + "-" + child,
+        style: 'stroke: black',
+        arrowheadStyle: "fill: black; stroke: black"
+      });
+    }
+    else {
+      dag.setEdge(parent, child, {
+        lineInterpolate: 'basis',
+        id: parent + "-" + child,
+        style: 'stroke: #DDD',
+        arrowheadStyle: "fill: #DDD; stroke: #DDD"
+      })
+    }
+
     //NOT a typo! only the parent's immediate collapsed children are expanded.
     //the parent's children's expanded children (not collapsed children) are expanded for the rest of the graph.
     expand(child, collapsedChildren[child].expandedChildren);
   }
 }
-
