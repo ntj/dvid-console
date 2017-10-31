@@ -109,13 +109,6 @@ module.exports = function(grunt) {
           },
           {
             expand: true,
-            cwd: 'build/',
-            src: '*.js',
-            flatten: true,
-            dest: 'lite-dist/js/'
-          },
-          {
-            expand: true,
             src: 'js/vendor/**',
             dest: 'lite-dist/'
           },
@@ -194,7 +187,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    clean: ['lite-dist/js', 'dist/js']
   });
 
   // Load the plugins
@@ -204,21 +196,19 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks("grunt-modernizr");
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-watch');
 
   //allow for two different watch targets
   //see http://stackoverflow.com/questions/20841623/grunt-contrib-watch-targets-and-recursion/21744582#21744582
-
+  grunt.loadNpmTasks('grunt-contrib-watch');
   // Rename watch to watchdev and load it again
   grunt.renameTask('watch', 'watchlite');
+  grunt.loadNpmTasks('grunt-contrib-watch');
 
   // Default task(s).
   grunt.registerTask('default', ['modernizr:dist','browserify:full']);
-  grunt.registerTask('dev', ['modernizr:dist', 'browserify:full', 'copy:dev', 'connect:full', 'watch']);
+  grunt.registerTask('dev', ['modernizr:dist', 'browserify:full', 'copy:dev', 'connect:full', 'watch'])
   grunt.registerTask('dist', ['modernizr:dist', 'browserify:full','uglify:full','copy:full', 'compress']);
   //lite builds
-  // grunt.registerTask('dev-lite', ['modernizr:dist', 'browserify:lite', 'copy:dev', 'connect:lite', 'watchlite']);
-  grunt.registerTask('dev-lite', ['copy:lite']);
+  grunt.registerTask('dev-lite', ['modernizr:dist', 'browserify:lite', 'copy:dev', 'connect:lite', 'watchlite'])
   grunt.registerTask('dist-lite', ['modernizr:dist', 'browserify:lite','uglify:lite','copy:lite']);
 };
