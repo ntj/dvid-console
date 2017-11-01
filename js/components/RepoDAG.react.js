@@ -223,7 +223,7 @@ var RepoDAGDisplay = React.createClass({
       if (n.Log.length) log = (n.Log);
       var nodeclass = "";
 
-      if (selectedBranch && (selectedBranch !== n.Branch)){
+      if ((selectedBranch !== null) && (selectedBranch !== n.Branch)){
         nodeclass += ' node-hint';
       }
       else {
