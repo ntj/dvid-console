@@ -81,6 +81,7 @@ var RepoDAGDisplay = React.createClass({
   },
 
   myCallbackBranches: function (selectedBranch) {
+    console.log('Antje is doing things');
     this.clear();
     dagControl.oddChildren = [];
     if (selectedBranch == 'Show all'){
