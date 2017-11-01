@@ -13,7 +13,7 @@ import ModalActions from '../actions/ModalActions';
 import {ModalTypes} from '../stores/ModalStore';
 import DAGmodals from '../components/DAGmodals.react.js';
 import stringify from 'json-stable-stringify';
-import BranchDropdown from '../lite-components/BranchDropdown.react.js';
+import BranchDropdown from '../components/BranchDropdown.react.js';
 
 var dag, elementHolderLayer, svgBackground;
 
@@ -81,7 +81,11 @@ var RepoDAGDisplay = React.createClass({
   },
 
   myCallbackBranches: function (selectedBranch) {
-    console.log('Antje is doing things');
+
+    if (selectedBranch == 'master'){
+      selectedBranch = '';
+    }
+
     this.clear();
     dagControl.oddChildren = [];
     if (selectedBranch == 'Show all'){

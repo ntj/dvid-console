@@ -29,8 +29,10 @@ export default class BranchDropdown extends React.Component {
    * @return {Event} Event of JavaScript can be used as usual.
    */
   onChange(e) {
+    console.log('e.target.value ' + e.target.value);
+    console.log('e.target.currentbranch ' + e.target.currentBranch);
     this.setState({
-      currentBranch: e.target.value !== "" e.target.value: 'master'
+      currentBranch: e.target.value
     });
   }
 
@@ -42,7 +44,7 @@ export default class BranchDropdown extends React.Component {
    */
   onSelect(val){
     this.setState({
-      currentBranch: 'honey',
+      currentBranch: val,
     });
 
     this.props.callbackFromParent(val);
@@ -54,22 +56,19 @@ export default class BranchDropdown extends React.Component {
   }
 
   getCompleteData() {
-    console.log('Antje makes changes');
-    var values = this.props.myNodes;
-    var keys = Object.keys(values);
-    var result = ['Show all'];
-    for (var i = 0; i < keys.length; i++) {
-      var tBranch = values[keys[i]].Branch;
-      // rename empty branch to master
-      if (tBranch == ''){
+      var values = this.props.myNodes;
+      var keys = Object.keys(values);
+      var result = ['Show all'];
+      for (var i = 0; i < keys.length; i++) {
+        var tBranch = values[keys[i]].Branch;
+        if (tBranch == ''){
           tBranch = 'master';
         }
-      if (result.indexOf(tBranch) === -1) { // result does have the branch name already -> add another node to the list of branch nodes
-        result.push(tBranch);
+        if (result.indexOf(tBranch) === -1) { // result does have the branch name already -> add another node to the list of branch nodes
+          result.push(tBranch);
+        }
       }
-    }
-    console.log(result);
-    return result;
+      return result;
   }
 
   /**

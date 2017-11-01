@@ -67,19 +67,9 @@
     border-radius: 3px;
 }
 
-.dag div.no-border{
-    border: none;
-}
-
 #dag-header{
     width: 90%;
     margin: auto;
-}
-
-.dag-dropdown {
-    width: 10%;
-    float: left;
-    border: none !important;
 }
 
 button {
