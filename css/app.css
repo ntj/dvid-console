@@ -325,6 +325,7 @@ text {
   fill: #e6e6e6;
 }
 
+/* When filtering for branches, display nodes which don't belong to branch in lighter grey */
 .node-hint > rect {
   stroke: #AAA;
   stroke-width: .5px;
