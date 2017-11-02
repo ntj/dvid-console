@@ -397,6 +397,10 @@ button.current{
   border: none;
 }
 
+.dag div.no-border div{
+  border: none;
+}
+
 /* fix: bootstrap tooltip arrow is slightly offset */
 .tooltip.bottom .tooltip-arrow{
   top:1px;
