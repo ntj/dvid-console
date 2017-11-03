@@ -14,6 +14,7 @@ import {ModalTypes} from '../stores/ModalStore';
 import DAGmodals from '../components/DAGmodals.react.js';
 import stringify from 'json-stable-stringify';
 import BranchDropdown from '../components/BranchDropdown.react.js';
+import BranchSelect from '../components/BranchSelect.react.js';
 
 var dag, elementHolderLayer, svgBackground;
 
@@ -754,8 +755,7 @@ var RepoDAGDisplay = React.createClass({
           <div className="dag">
             <div>
               <div className="dag-dropdown no-border">
-                {/*<VersionDropdown myNodes={this.props.repo.DAG.Nodes} callbackFromParent={this.myCallback}/>*/}
-                <BranchDropdown myNodes={this.props.repo.DAG.Nodes} callbackFromParent={this.myCallbackBranches} />
+                <BranchSelect myNodes={this.props.repo.DAG.Nodes}/>
               </div>
               <div className='dag-tools'>
                 <button className="btn btn-default pull-right" data-container="body" data-toggle="tooltip"
