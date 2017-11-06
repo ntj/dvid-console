@@ -13,7 +13,6 @@ import ModalActions from '../actions/ModalActions';
 import {ModalTypes} from '../stores/ModalStore';
 import DAGmodals from '../components/DAGmodals.react.js';
 import stringify from 'json-stable-stringify';
-import BranchDropdown from '../components/BranchDropdown.react.js';
 import BranchSelect from '../components/BranchSelect.react.js';
 
 var dag, elementHolderLayer, svgBackground;
@@ -167,7 +166,7 @@ var RepoDAGDisplay = React.createClass({
 
   // collect the nodes all the way to the top
   collectNodesBackToRoot: function(currentNode, branchObject){
-      if (currentNode.Parents && currentNode.Parents.length > 0){
+      if (currentNode && currentNode.Parents && currentNode.Parents.length > 0){
           for (var j = 0; j < currentNode.Parents.length; j++){
               var tNode = this.getNodeByVersion(currentNode.Parents[j]);
               branchObject[tNode.UUID] = tNode;
@@ -178,7 +177,7 @@ var RepoDAGDisplay = React.createClass({
   },
 
   drawEdgedBackToRoot: function(currentNode){
-      if (currentNode.Parents && currentNode.Parents.length > 0){
+      if (currentNode && currentNode.Parents && currentNode.Parents.length > 0){
           var parent = currentNode.Parents[0];
           dag.setEdge(
             parent,

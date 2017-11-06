@@ -391,6 +391,7 @@ button.current{
 
 .dag div.dag-dropdown{
   float: left;
+  min-width: 150px;
 }
 
 .dag div.no-border {
@@ -399,6 +400,14 @@ button.current{
 
 .dag div.no-border div{
   border: none;
+}
+
+dag div.no-border:nth-child(even){
+  background: green
+}
+
+dag div.no-border input div:nth-child(even){
+  background: red
 }
 
 /* fix: bootstrap tooltip arrow is slightly offset */
