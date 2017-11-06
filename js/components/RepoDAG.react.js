@@ -81,7 +81,7 @@ var RepoDAGDisplay = React.createClass({
     }
   },
 
-  myCallbackBranches: function (selectedBranch) {
+  callbackBranches: function (selectedBranch) {
 
     if (selectedBranch == 'master'){
       selectedBranch = '';
@@ -755,7 +755,7 @@ var RepoDAGDisplay = React.createClass({
           <div className="dag">
             <div>
               <div className="dag-dropdown no-border">
-                <BranchSelect myNodes={this.props.repo.DAG.Nodes}/>
+                <BranchSelect myNodes={this.props.repo.DAG.Nodes} callbackFromParent={this.callbackBranches}/>
               </div>
               <div className='dag-tools'>
                 <button className="btn btn-default pull-right" data-container="body" data-toggle="tooltip"

@@ -36,6 +36,7 @@ var StatesField = createClass({
 		this.setState({
 			selectValue: newValue,
 		});
+		this.props.callbackFromParent(newValue);
 	},
 	focusStateSelect () {
 		this.refs.stateSelect.focus();
@@ -67,23 +68,21 @@ var StatesField = createClass({
 		})
 	 // Prepend showall
          result.unshift({value: 'showall', label: 'Show All', className: ''});
-	console.log(result);
          return result;
   	},
 
 	render () {
 		var options = this.getCompleteData();
-		console.log(options);
 		return (
 			<div className="section">
 				<Select
-					id="state-select"
-					ref="stateSelect"
+					id="branch-select"
+					ref="branchSelect"
 					autoFocus
 					options={options}
 					simpleValue
 					clearable={this.state.clearable}
-					name="selected-state"
+					name="selected-branch"
 					disabled={this.state.disabled}
 					value={this.state.selectValue}
 					onChange={this.updateValue}
