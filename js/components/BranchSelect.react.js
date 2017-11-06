@@ -3,8 +3,12 @@ import createClass from 'create-react-class';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 
-var StatesField = createClass({
-	displayName: 'StatesField',
+var BranchDropdown = createClass({
+
+	showAllLabel: 'Show all',
+
+	displayName: 'BranchDropdown',
+
 	propTypes: {
 		label: PropTypes.string,
 		searchable: PropTypes.bool,
@@ -13,7 +17,7 @@ var StatesField = createClass({
 	getDefaultProps () {
 		return {
 			value: 'showall',
-			label: 'Show all:',
+			label: this.showAllLabel,
 			searchable: true,
 		};
 	},
@@ -21,7 +25,7 @@ var StatesField = createClass({
 	getInitialState () {
 		return {
 			value: 'showall',
-			label: 'Show All',
+			label: this.showAllLabel,
 			className: ''
 		}
 	},
@@ -32,6 +36,7 @@ var StatesField = createClass({
 		});
 		this.props.callbackFromParent(newValue);
 	},
+
 	focusStateSelect () {
 		this.refs.stateSelect.focus();
 	},
@@ -44,11 +49,12 @@ var StatesField = createClass({
 
 	getCompleteData() {
       	var nodes = this.props.myNodes;
+      	var addMaster = false;
 		// get distinct branch names
         var keySet = Object.keys(nodes).reduce(
 		function(set, key) {
 			if (nodes[key].Branch == ""){
-			  set.add('master');
+			  addMaster = true;
 			}
 			else {
 			  set.add(nodes[key].Branch)
@@ -62,15 +68,20 @@ var StatesField = createClass({
 		return { value: key, label: key, className: ''};
 		})
 
-	 	// Prepend showall
-        result.unshift({value: 'showall', label: 'Show All', className: ''});
+		// if master, prepend master
+		if(addMaster){
+			result.unshift({value: 'master', label: 'master', className: ''});
+		}
+
+	 	// always Prepend showall
+        result.unshift({value: 'showall', label: this.showAllLabel, className: ''});
         return result;
   	},
 
 	render () {
 		var options = this.getCompleteData();
 		return (
-			<div className="section branch-select">
+			<div className="section branch-select no-border">
 				<Select
 					id="branch-select"
 					ref="branchSelect"
@@ -90,4 +101,4 @@ var StatesField = createClass({
 	}
 });
 
-module.exports = StatesField;
+module.exports = BranchDropdown;

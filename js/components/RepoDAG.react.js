@@ -81,14 +81,13 @@ var RepoDAGDisplay = React.createClass({
   },
 
   callbackBranches: function (selectedBranch) {
-
     if (selectedBranch == 'master'){
       selectedBranch = '';
     }
 
     this.clear();
     dagControl.oddNodes = [];
-    if (selectedBranch == 'Show all'){
+    if (selectedBranch == 'showall'){
       if (this.props.repo.DAG.Nodes.hasOwnProperty(this.props.uuid)) {
         this.initDag(this, this.props, null, null);
       }
@@ -133,7 +132,7 @@ var RepoDAGDisplay = React.createClass({
     var nodes = this.props.repo.DAG.Nodes;
     var keys = Object.keys(nodes);
     for (var i = 0; i < keys.length; i++){
-        if (nodes[keys[i]].Branch === ""){
+        if (nodes[keys[i]].Parents.length == 0){
             return nodes[keys[i]];
         }
     }
@@ -142,6 +141,7 @@ var RepoDAGDisplay = React.createClass({
 
   // find nodes belonging to the partial graph
   traverseTree: function(node, selectedBranch, branchObject, first){
+
       // if we have a node, which belongs to our branch, add this node to the list
       if (node.Branch === selectedBranch){
         branchObject[node.UUID] = node;

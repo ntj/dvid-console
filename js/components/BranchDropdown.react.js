@@ -11,7 +11,7 @@ export default class BranchDropdown extends React.Component {
     // Set initial State
     this.state = {
       // Current value of the select field
-      currentBranch: this.getFirstBranch(),
+      value: this.getFirstBranch(),
       autocompleteData: this.getCompleteData()
     };
 
@@ -29,11 +29,11 @@ export default class BranchDropdown extends React.Component {
    * @return {Event} Event of JavaScript can be used as usual.
    */
   onChange(e) {
-    console.log('e.target.value ' + e.target.value);
-    console.log('e.target.currentbranch ' + e.target.currentBranch);
     this.setState({
-      currentBranch: e.target.value
+      value: e.target.value
     });
+    // this.render();
+    console.log("The Input Text has changed to ", this.state.value);
   }
 
   /**
@@ -44,9 +44,10 @@ export default class BranchDropdown extends React.Component {
    */
   onSelect(val){
     this.setState({
-      currentBranch: val,
+      value: val,
     });
 
+    console.log("Option from 'database' selected : ", this.state.value);
     this.props.callbackFromParent(val);
   }
 
@@ -103,7 +104,7 @@ export default class BranchDropdown extends React.Component {
               getItemValue={this.getItemValue}
               items={this.state.autocompleteData}
               renderItem={this.renderItem}
-              value={this.state.currentBranch}
+              value={this.state.value}
               onChange={this.onChange}
               onSelect={this.onSelect}
           />
