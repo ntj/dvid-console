@@ -1,4 +1,4 @@
-import React from 'react';
+	import React from 'react';
 import createClass from 'create-react-class';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
@@ -47,21 +47,28 @@ var StatesField = createClass({
 	},
 
 	getCompleteData() {
-      var values = this.props.myNodes;
-      var keys = Object.keys(values);
-      // var result = 'Show all'];
-      var result = [{value: 'showall', label: 'Show All', className: ''}];
-      for (var i = 0; i < keys.length; i++) {
-        var tBranch = values[keys[i]].Branch;
-        if (tBranch == ''){
-          tBranch = 'master';
-        }
-        // if (Object.keys(result).indexOf(tBranch) === -1) { // result does have the branch name already -> add another node to the list of branch nodes
-        //   result.push({value: tBranch, label: tBranch, className: ''});
-        // }
-        result.push({value: tBranch, label: tBranch, className: ''});
-      }
-      return result;
+	
+      	 var nodes = this.props.myNodes;
+	// get distinct branch names
+         var keySet = Object.keys(nodes).reduce(
+		function(set, key) {
+			if (nodes[key].Branch == ""){
+			  set.add('master');
+			}
+			else {
+			  set.add(nodes[key].Branch)
+			}
+			return set;
+		},
+		new Set());
+        // create object for each branch
+	 var result = Array.from(keySet).map(function(key){
+		return { value: key, label: key, className: ''};
+		})
+	 // Prepend showall
+         result.unshift({value: 'showall', label: 'Show All', className: ''});
+	console.log(result);
+         return result;
   	},
 
 	render () {
